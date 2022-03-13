@@ -9,3 +9,7 @@ if (${STEP} STREQUAL "step0")
     return()
 endif()
 
+if (${STEP} STREQUAL "step1")
+    add_executable(step1_read_print step1_read_print.cpp)
+    return()
+endif()
