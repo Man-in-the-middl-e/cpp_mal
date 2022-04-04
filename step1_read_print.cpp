@@ -1,27 +1,32 @@
-
 #include <iostream>
 #include <string>
 #include <string_view>
 
-std::string_view
+#include "maltypes.h"
+#include "printer.h"
+#include "reader.h"
+
+using MalType = mal::MalType;
+
+std::unique_ptr<MalType>
 read(std::string_view program)
 {
-    return program;
+    return mal::readStr(program);
 }
 
-std::string_view
-eval(std::string_view program)
+std::unique_ptr<MalType>
+eval(std::unique_ptr<MalType> program)
 {
     return program;
 }
 
-std::string_view
-print(std::string_view program)
+std::string
+print(std::unique_ptr<MalType> program)
 {
-    return program;
+    return print_st(program.get());
 }
 
-std::string_view
+std::string
 rep(std::string_view program)
 {
     return print(eval(read(program)));

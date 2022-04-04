@@ -10,6 +10,6 @@ if (${STEP} STREQUAL "step0")
 endif()
 
 if (${STEP} STREQUAL "step1")
-    add_executable(step1_read_print step1_read_print.cpp)
+    add_executable(step1_read_print step1_read_print.cpp lexer.cpp reader.cpp maltypes.cpp)
     return()
 endif()
