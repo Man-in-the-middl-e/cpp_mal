@@ -122,6 +122,10 @@ std::vector<Token> Lexer::tokenize()
             tokens.push_back(makeOneCharToken(TokenType::PLUS));
             break;
         }
+        case '/': {
+            tokens.push_back(makeOneCharToken(TokenType::DIVIDE));
+            break;
+        }
         case '=': {
             tokens.push_back(makeOneCharToken(TokenType::EQUAL));
             break;
