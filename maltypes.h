@@ -1,12 +1,13 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <string_view>
-#include <vector>
-#include <memory>
 #include <unordered_map>
+#include <vector>
 
 namespace mal {
+enum class TokenType : char;
 
 class MalType {
 public:
@@ -17,6 +18,7 @@ public:
 class MalNumber final : public MalType {
 public:
     MalNumber(std::string_view number);
+    MalNumber(int number);
     std::string asString() const override;
     int getValue() const;
 
@@ -26,16 +28,29 @@ private:
 
 class MalContainer : public MalType {
 public:
-    MalContainer(char openBracket, char closeBracket);
+    enum class ContainerType {
+        LIST,
+        VECTOR
+    };
+
+    MalContainer(ContainerType containerType);
+
     std::string asString() const override;
+
     void append(std::unique_ptr<MalType>);
+    bool isEmpty() const;  
+    ContainerType type() const;
+
+    MalType* first() const;
+
+    std::vector<std::unique_ptr<MalType>>::iterator begin();
+    std::vector<std::unique_ptr<MalType>>::iterator end();
 
 protected:
     std::vector<std::unique_ptr<MalType>> m_data;
 
 private:
-    char m_openBracket;
-    char m_closeBracket;
+    ContainerType m_type;
 };
 
 class MalList final : public MalContainer {
@@ -85,12 +100,37 @@ private:
 
 class MalHashMap final : public MalType {
 public:
+    using HashMapIteraotr = std::unordered_map<std::string, std::unique_ptr<MalType>>::iterator;
+
+public:
     std::string asString() const override;
 
     void insert(const std::string& key, std::unique_ptr<MalType> value);
 
+    HashMapIteraotr begin();
+    HashMapIteraotr end();
+
 private:
-    std::unordered_map<std::string, std::unique_ptr<MalType>> m_hasMap;
+    std::unordered_map<std::string, std::unique_ptr<MalType>> m_hashMap;
+};
+
+class MalOp final : public MalType {
+public:
+    MalOp(TokenType);
+    std::string asString() const override;
+    char getOp() const;
+
+private:
+    char m_op;
+};
+
+class MalError : public MalType {
+public:
+    MalError(const std::string& message);
+    std::string asString() const;
+
+private:
+    std::string m_message;
 };
 
 } // namespace mal
