@@ -226,7 +226,7 @@ MalOp::MalOp(TokenType type)
 
 std::string MalOp::asString() const 
 {
-    return "";
+    return std::string(1, m_op);
 }
 
 char MalOp::getOp() const

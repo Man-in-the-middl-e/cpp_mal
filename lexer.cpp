@@ -41,11 +41,6 @@ std::vector<Token> Lexer::tokenize()
             continue;
         }
 
-        if (isalpha(currentSymbol)) {
-            tokens.push_back(matchIdentifier());
-            continue;
-        }
-
         if (isdigit(currentSymbol)) {
             tokens.push_back(matchNumber());
             continue;
@@ -113,6 +108,8 @@ std::vector<Token> Lexer::tokenize()
         case '-': {
             if (isdigit(peek())) {
                 tokens.push_back(matchNumber());
+            } else if (isalpha(peek())) {
+                tokens.push_back(mathcSymbol());
             } else {
                 tokens.push_back(makeOneCharToken(TokenType::MINUS));
             }
@@ -139,7 +136,7 @@ std::vector<Token> Lexer::tokenize()
             break;
         }
         case ':': {
-            tokens.push_back(matchIdentifier(true));
+            tokens.push_back(mathcSymbol(true));
             break;
         }
         case '"': {
@@ -151,8 +148,8 @@ std::vector<Token> Lexer::tokenize()
             break;
         }
         default: {
-            std::cout << "Unimplmented token: `" << currentSymbol << "`" << std::endl;
-            assert(false);
+            tokens.push_back(mathcSymbol());
+            break;
         }
         }
     }
@@ -219,19 +216,6 @@ Token Lexer::matchSemicolon()
     return makeToken(TokenType::SEMICOLON, startPos, m_currentIndex - startPos);
 }
 
-Token Lexer::matchIdentifier(bool isKeyword)
-{
-    const auto startPos = m_currentIndex - 1;
-    auto isIdentifierSymbol = [](char c) {
-        return c == '-' || c == '_' || isalpha(c) || isdigit(c);
-    };
-    while (!isEnd() && isIdentifierSymbol(peek())) {
-        advance();
-    }
-    return makeToken(isKeyword ? TokenType::KEYWORD : TokenType::IDENTIFIER,
-                    startPos, m_currentIndex - startPos);
-}
-
 Token Lexer::matchNumber()
 {
     const auto startPos = m_currentIndex - 1;
@@ -242,13 +226,14 @@ Token Lexer::matchNumber()
     return makeToken(TokenType::NUMBER, startPos, m_currentIndex - startPos);
 }
 
-Token Lexer::mathcSymbol()
+Token Lexer::mathcSymbol(bool isKeyword)
 {
+    using namespace std::literals;
     const auto startPos = m_currentIndex - 1;
-
-    while (!isEnd() && peek() != ' ' && peek() != ')' && peek() != ',') {
+    auto isSeparator = [](char c) { return " ),"sv.find(c) != std::string_view::npos; };
+    while (!isEnd() && !isSeparator(peek())) {
         advance();
     }
-    return makeToken(TokenType::SYMBOL, startPos, m_currentIndex - startPos);
+    return makeToken(isKeyword ? TokenType::KEYWORD : TokenType::SYMBOL, startPos, m_currentIndex - startPos);
 }
 } // namespace mal

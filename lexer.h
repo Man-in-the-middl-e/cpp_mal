@@ -28,7 +28,6 @@ namespace mal {
     VARIANT(LESS_THAN) \
     VARIANT(TILDE_AT) /* ~@ */ \
     VARIANT(STRING) \
-    VARIANT(IDENTIFIER) \
     VARIANT(NUMBER) \
     VARIANT(ERROR_UNTERMINATED_STRING) \
     VARIANT(KEYWORD) \
@@ -64,9 +63,8 @@ private:
     Token makeToken(TokenType type, size_t startPos, size_t tokenLen) const;
     Token matchString();
     Token matchSemicolon();
-    Token matchIdentifier(bool isKeyword = false);
     Token matchNumber();
-    Token mathcSymbol();
+    Token mathcSymbol(bool isKeyword = false);
 
 private:
     size_t m_currentIndex { 0 };
