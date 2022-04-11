@@ -25,9 +25,9 @@ std::string escapeString(const std::string& str)
     return ss.str();
 }
 
-std::string print_st(const mal::MalType* malObject, bool printReadably = true)
+std::string print_st(mal::MalType* malObject, bool printReadably = true)
 {
-    if (auto malStr = dynamic_cast<const mal::MalString*>(malObject); malStr && printReadably) {
+    if (auto malStr = malObject->asMalString(); malStr && printReadably) {
         return malStr->isEmpty() ? malStr->asString() : escapeString(malStr->asString());
     }
     return malObject->asString();
