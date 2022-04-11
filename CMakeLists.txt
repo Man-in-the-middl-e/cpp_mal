@@ -15,6 +15,6 @@ if (${STEP} STREQUAL "step1")
 endif()
 
 if (${STEP} STREQUAL "step2")
-    add_executable(step2_eval step2_eval.cpp lexer.cpp reader.cpp maltypes.cpp)
+    add_executable(step2_eval step2_eval.cpp lexer.cpp reader.cpp maltypes.cpp env.cpp)
     return()
 endif()

@@ -54,11 +54,6 @@ std::unique_ptr<MalType> readAtom(const Reader& reader)
         return std::make_unique<MalString>(currentToken.token);
     case TokenType::ERROR_UNTERMINATED_STRING:
         return std::make_unique<MalString>();
-    case TokenType::PLUS:
-    case TokenType::MINUS:
-    case TokenType::MULT:
-    case TokenType::DIVIDE:
-        return std::make_unique<MalOp>(currentToken.type);
     default:
         return std::make_unique<MalSymbol>(currentToken.token);
     }

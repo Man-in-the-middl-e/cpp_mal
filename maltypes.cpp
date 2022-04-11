@@ -1,8 +1,8 @@
 #include "maltypes.h"
 
+#include <cassert>
 #include <iostream>
 #include <sstream>
-#include <cassert>
 
 #include "lexer.h"
 
@@ -60,7 +60,7 @@ MalNumber::MalNumber(int number)
 {
 }
 
-MalNumber* MalNumber::asMalNumber()  
+MalNumber* MalNumber::asMalNumber()
 {
     return this;
 }
@@ -80,7 +80,7 @@ MalContainer::MalContainer(ContainerType type)
 {
 }
 
-MalContainer* MalContainer::asMalContainer() 
+MalContainer* MalContainer::asMalContainer()
 {
     return this;
 }
@@ -116,12 +116,17 @@ bool MalContainer::isEmpty() const
     return m_data.empty();
 }
 
-MalContainer::ContainerType MalContainer::type() const 
+size_t MalContainer::size() const 
+{
+    return m_data.size();
+}
+
+MalContainer::ContainerType MalContainer::type() const
 {
     return m_type;
 }
 
-MalType* MalContainer::first() const 
+MalType* MalContainer::first() const
 {
     assert(m_data.size());
     return m_data[0].get();
@@ -216,7 +221,7 @@ void MalHashMap::insert(const std::string& key, std::unique_ptr<MalType> value)
     m_hashMap.insert({ key, std::move(value) });
 }
 
-MalHashMap::HashMapIteraotr MalHashMap::begin() 
+MalHashMap::HashMapIteraotr MalHashMap::begin()
 {
     return m_hashMap.begin();
 }
@@ -226,30 +231,19 @@ MalHashMap::HashMapIteraotr MalHashMap::end()
     return m_hashMap.end();
 }
 
-MalOp::MalOp(TokenType type)
+MalOp::MalOp(char op)
+    : m_op(op)
 {
-    switch (type) {
-    case TokenType::PLUS:
-        m_op = '+';
-        break;
-    case TokenType::MINUS:
-        m_op = '-';
-        break;
-    case TokenType::MULT:
-        m_op = '*';
-        break;
-    case TokenType::DIVIDE:
-        m_op = '/';
-        break;
-    default:
-        std::cout << "No such operation: " << type;
-        assert(false);
-    }
 }
 
-std::string MalOp::asString() const 
+std::string MalOp::asString() const
 {
     return std::string(1, m_op);
+}
+
+MalOp* MalOp::asMalOp()
+{
+    return this;
 }
 
 char MalOp::getOp() const

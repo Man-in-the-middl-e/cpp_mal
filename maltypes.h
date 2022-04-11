@@ -14,6 +14,7 @@ class MalContainer;
 class MalSymbol;
 class MalString;
 class MalHashMap;
+class MalOp;
 
 class MalType {
 public:
@@ -24,6 +25,7 @@ public:
     virtual MalSymbol* asMalSymbol() { return nullptr; }
     virtual MalString* asMalString() { return nullptr; }
     virtual MalHashMap* asMalHashMap() { return nullptr; }
+    virtual MalOp* asMalOp() { return nullptr; }
     
     virtual ~MalType(){
     }
@@ -57,6 +59,7 @@ public:
 
     void append(std::unique_ptr<MalType>);
     bool isEmpty() const;
+    size_t size() const;
     ContainerType type() const;
 
     MalType* first() const;
@@ -140,8 +143,11 @@ private:
 
 class MalOp final : public MalType {
 public:
-    MalOp(TokenType);
+    MalOp(char op);
+
     std::string asString() const override;
+    MalOp* asMalOp() override;
+
     char getOp() const;
 
 private:
