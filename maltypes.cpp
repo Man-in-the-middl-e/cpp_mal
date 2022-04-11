@@ -50,8 +50,6 @@ std::string unescapeString(std::string_view str)
 }
 namespace mal {
 
-MalType::~MalType() { }
-
 MalNumber::MalNumber(std::string_view number)
     : m_number(std::atoi(number.data()))
 {
@@ -60,6 +58,11 @@ MalNumber::MalNumber(std::string_view number)
 MalNumber::MalNumber(int number)
     : m_number(number)
 {
+}
+
+MalNumber* MalNumber::asMalNumber()  
+{
+    return this;
 }
 
 std::string MalNumber::asString() const
@@ -75,6 +78,11 @@ int MalNumber::getValue() const
 MalContainer::MalContainer(ContainerType type)
     : m_type(type)
 {
+}
+
+MalContainer* MalContainer::asMalContainer() 
+{
+    return this;
 }
 
 std::string MalContainer::asString() const
@@ -139,6 +147,11 @@ std::string MalSymbol::asString() const
     return m_symbol;
 }
 
+MalSymbol* MalSymbol::asMalSymbol()
+{
+    return this;
+}
+
 MalString::MalString(std::string_view str)
     : m_malString(unescapeString(str))
 {
@@ -149,6 +162,11 @@ std::string MalString::asString() const
     if (m_malString.size() == 0)
         return "unbalanced";
     return m_malString;
+}
+
+MalString* MalString::asMalString()
+{
+    return this;
 }
 
 bool MalString::isEmpty() const
@@ -186,6 +204,11 @@ std::string MalHashMap::asString() const
     }
     ss << "}";
     return ss.str();
+}
+
+MalHashMap* MalHashMap::asMalHashMap()
+{
+    return this;
 }
 
 void MalHashMap::insert(const std::string& key, std::unique_ptr<MalType> value)

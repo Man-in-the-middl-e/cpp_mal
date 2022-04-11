@@ -9,17 +9,34 @@
 namespace mal {
 enum class TokenType : char;
 
+class MalNumber;
+class MalContainer;
+class MalSymbol;
+class MalString;
+class MalHashMap;
+
 class MalType {
 public:
     virtual std::string asString() const = 0;
-    virtual ~MalType();
+
+    virtual MalNumber* asMalNumber() { return nullptr; }
+    virtual MalContainer* asMalContainer() { return nullptr; }
+    virtual MalSymbol* asMalSymbol() { return nullptr; }
+    virtual MalString* asMalString() { return nullptr; }
+    virtual MalHashMap* asMalHashMap() { return nullptr; }
+    
+    virtual ~MalType(){
+    }
 };
 
 class MalNumber final : public MalType {
 public:
     MalNumber(std::string_view number);
     MalNumber(int number);
+
     std::string asString() const override;
+    MalNumber* asMalNumber() override;
+
     int getValue() const;
 
 private:
@@ -36,9 +53,10 @@ public:
     MalContainer(ContainerType containerType);
 
     std::string asString() const override;
+    MalContainer* asMalContainer() override;
 
     void append(std::unique_ptr<MalType>);
-    bool isEmpty() const;  
+    bool isEmpty() const;
     ContainerType type() const;
 
     MalType* first() const;
@@ -66,7 +84,9 @@ public:
 class MalSymbol final : public MalType {
 public:
     MalSymbol(std::string_view symbol);
+
     std::string asString() const override;
+    MalSymbol* asMalSymbol() override;
 
 private:
     std::string m_symbol;
@@ -76,7 +96,10 @@ class MalString final : public MalType {
 public:
     MalString() = default; // for invalid strings
     MalString(std::string_view str);
+
     std::string asString() const override;
+    MalString* asMalString() override;
+
     bool isEmpty() const;
 
 private:
@@ -104,6 +127,7 @@ public:
 
 public:
     std::string asString() const override;
+    MalHashMap* asMalHashMap() override;
 
     void insert(const std::string& key, std::unique_ptr<MalType> value);
 
