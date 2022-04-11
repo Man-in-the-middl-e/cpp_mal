@@ -18,7 +18,8 @@ read(std::string_view program)
 std::unique_ptr<MalType>
 eval(std::unique_ptr<MalType> ast)
 {
-    return eval_ast(std::move(ast));
+    mal::Env env;
+    return EVAL(std::move(ast), env);
 }
 
 std::string

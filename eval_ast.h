@@ -1,85 +1,87 @@
 #pragma once
 
 #include <cassert>
-#include <functional>
-#include <iostream>
-#include <numeric>
-#include <stack>
 
+#include "env.h"
 #include "maltypes.h"
 
-int applyOp(const std::vector<int>& numbers, const mal::MalOp* malOp)
+namespace mal {
+std::unique_ptr<MalType> apply(std::unique_ptr<MalType> ast)
 {
-    switch (malOp->getOp()) {
-    case '+':
-        return std::accumulate(numbers.rbegin(), numbers.rend(), 0);
-    case '-':
-        return std::accumulate(numbers.rbegin(), numbers.rend(), numbers.back() * 2, std::minus<int>());
-    case '*':
-        return std::accumulate(numbers.rbegin(), numbers.rend(), 1, std::multiplies<int>());
-    case '/':
-        return std::accumulate(numbers.rbegin(), numbers.rend(), numbers.back() * numbers.back(), std::divides<int>());
-    default:
-        std::cout << "op: " << malOp->getOp() << "is not supported\n";
-        assert(false);
+    auto malContainer = ast->asMalContainer();
+    assert(malContainer->size() != 0);
+
+    if (auto firstElem = malContainer->first(); !firstElem->asMalOp()) {
+        if (firstElem->asMalNumber()) {
+            return ast;
+        }
+        return std::make_unique<MalError>("Operation is not supported");
+    } else {
+        int res = 0;
+        for (auto it = malContainer->begin(); it != malContainer->end(); ++it) {
+            // assume that first element is operation
+            if (std::distance(malContainer->begin(), it) == 0) {
+                continue;
+            }
+
+            const auto currentValue = (*it)->asMalNumber()->getValue();
+            if (std::distance(malContainer->begin(), it) == 1) {
+                res = currentValue;
+                continue;
+            }
+            switch (firstElem->asMalOp()->getOp()) {
+            case '+':
+                res += currentValue;
+                break;
+            case '-':
+                res -= currentValue;
+                break;
+            case '*':
+                res *= currentValue;
+                break;
+            case '/':
+                res /= currentValue;
+                break;
+            }
+        }
+        return std::make_unique<MalNumber>(res);
     }
+    return ast;
 }
 
-namespace mal {
-// TODO: replace ad hoc implementation with pure recusive solution, without using a stack!
-std::unique_ptr<MalType> eval_ast(std::unique_ptr<MalType> ast)
-{
-    if (auto container = dynamic_cast<MalContainer*>(ast.get()); container) {
+std::unique_ptr<MalType> eval_ast(std::unique_ptr<MalType> ast, const Env& env);
 
+std::unique_ptr<MalType> EVAL(std::unique_ptr<MalType> ast, const Env& env)
+{
+    if (auto container = ast->asMalContainer(); container) {
         if (container->isEmpty()) {
             return ast;
         }
-
-        if (!dynamic_cast<MalOp*>(container->first()) && !dynamic_cast<MalNumber*>(container->first())) {
-            auto errorMsg = "operation " + container->first()->asString() + " is not supported";
-            return std::make_unique<MalError>(errorMsg);
-        }
-
-        std::stack<std::unique_ptr<MalType>> malStack;
-        for (auto& obj : *container) {
-            if (dynamic_cast<MalContainer*>(obj.get())) {
-                malStack.push((eval_ast(std::move(obj))));
-                continue;
-            }
-            malStack.push(std::move(obj));
-        }
-
-        while (malStack.size() != 1) {
-            std::vector<int> tempBuffer;
-
-            while (!malStack.empty() && !dynamic_cast<MalOp*>(malStack.top().get())) {
-                tempBuffer.push_back(dynamic_cast<MalNumber*>(malStack.top().get())->getValue());
-                malStack.pop();
-            }
-
-            if (malStack.empty()) {
-                auto newContainer = std::make_unique<MalContainer>(container->type());
-                for (auto it = tempBuffer.rbegin(); it != tempBuffer.rend(); ++it) {
-                    newContainer->append(std::make_unique<MalNumber>(*it));
-                }
-                return newContainer;
-            } 
-
-            int res = applyOp(tempBuffer, dynamic_cast<const MalOp*>(malStack.top().get()));
-            malStack.pop();
-            malStack.push(std::make_unique<MalNumber>(res));
-        }
-        return std::make_unique<MalNumber>(malStack.top()->asString());
+        return apply(eval_ast(std::move(ast), env));
     }
+    return eval_ast(std::move(ast), env);
+}
 
-    if (auto hashMap = dynamic_cast<MalHashMap*>(ast.get()); hashMap) {
+std::unique_ptr<MalType> eval_ast(std::unique_ptr<MalType> ast, const Env& env)
+{
+    if (auto container = ast->asMalContainer(); container) {
+        if (container->isEmpty()) {
+            return ast;
+        }
+        auto newContainer = std::make_unique<MalContainer>(container->type());
+        for (auto& element : *container) {
+            newContainer->append(EVAL(std::move(element), env));
+        }
+        return newContainer;
+    } else if (auto symbol = ast->asMalSymbol(); symbol) {
+        return env.find(*symbol);
+    } else if (auto hashMap = ast->asMalHashMap(); hashMap) {
         auto newHashMap = std::make_unique<MalHashMap>();
         for (auto& [key, value] : *hashMap) {
-            newHashMap->insert(key, eval_ast(std::move(value)));
+            newHashMap->insert(key, EVAL(std::move(value), env));
         }
         return newHashMap;
     }
     return ast;
 }
-
 } // namespace mal
