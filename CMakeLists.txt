@@ -18,3 +18,8 @@ if (${STEP} STREQUAL "step2")
     add_executable(step2_eval step2_eval.cpp lexer.cpp reader.cpp maltypes.cpp env.cpp)
     return()
 endif()
+
+if (${STEP} STREQUAL "step3")
+    add_executable(step3_env step3_env.cpp lexer.cpp reader.cpp maltypes.cpp env.cpp)
+    return()
+endif()

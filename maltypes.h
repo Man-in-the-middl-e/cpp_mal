@@ -16,6 +16,7 @@ class MalSymbol;
 class MalString;
 class MalHashMap;
 class MalOp;
+class MalError;
 
 class MalType {
 public:
@@ -27,6 +28,7 @@ public:
     virtual MalString* asMalString() { return nullptr; }
     virtual MalHashMap* asMalHashMap() { return nullptr; }
     virtual MalOp* asMalOp() { return nullptr; }
+    virtual MalError* asMalError() { return nullptr; }
 
     virtual ~MalType()
     {
@@ -160,7 +162,9 @@ private:
 class MalError : public MalType {
 public:
     MalError(const std::string& message);
-    std::string asString() const;
+
+    std::string asString() const override;
+    MalError* asMalError() override;
 
 private:
     std::string m_message;

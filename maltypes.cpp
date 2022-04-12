@@ -116,7 +116,7 @@ bool MalContainer::isEmpty() const
     return m_data.empty();
 }
 
-size_t MalContainer::size() const 
+size_t MalContainer::size() const
 {
     return m_data.size();
 }
@@ -233,8 +233,7 @@ MalHashMap::HashMapIteraotr MalHashMap::end()
 MalOp::MalOp(char op)
     : m_opType(op)
 {
-    switch (m_opType)
-    {
+    switch (m_opType) {
     case '+':
         m_op = std::plus<int>();
         break;
@@ -276,5 +275,10 @@ MalError::MalError(const std::string& message)
 std::string MalError::asString() const
 {
     return "ERROR: " + m_message;
+}
+
+MalError* MalError::asMalError() 
+{
+    return this;
 }
 } // namespace mal
