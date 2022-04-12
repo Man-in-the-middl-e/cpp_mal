@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -26,8 +27,9 @@ public:
     virtual MalString* asMalString() { return nullptr; }
     virtual MalHashMap* asMalHashMap() { return nullptr; }
     virtual MalOp* asMalOp() { return nullptr; }
-    
-    virtual ~MalType(){
+
+    virtual ~MalType()
+    {
     }
 };
 
@@ -62,7 +64,7 @@ public:
     size_t size() const;
     ContainerType type() const;
 
-    MalType* first() const;
+    std::shared_ptr<MalType> at(size_t index) const;
 
     std::vector<std::shared_ptr<MalType>>::iterator begin();
     std::vector<std::shared_ptr<MalType>>::iterator end();
@@ -148,10 +150,11 @@ public:
     std::string asString() const override;
     MalOp* asMalOp() override;
 
-    char getOp() const;
+    MalNumber applyOp(const MalNumber& lhs, const MalNumber& rhs);
 
 private:
-    char m_op;
+    char m_opType;
+    std::function<int(int, int)> m_op;
 };
 
 class MalError : public MalType {

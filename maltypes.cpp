@@ -126,10 +126,9 @@ MalContainer::ContainerType MalContainer::type() const
     return m_type;
 }
 
-MalType* MalContainer::first() const
+std::shared_ptr<MalType> MalContainer::at(size_t index) const
 {
-    assert(m_data.size());
-    return m_data[0].get();
+    return m_data[index];
 }
 
 MalList::MalList()
@@ -232,13 +231,31 @@ MalHashMap::HashMapIteraotr MalHashMap::end()
 }
 
 MalOp::MalOp(char op)
-    : m_op(op)
+    : m_opType(op)
 {
+    switch (m_opType)
+    {
+    case '+':
+        m_op = std::plus<int>();
+        break;
+    case '-':
+        m_op = std::minus<int>();
+        break;
+    case '*':
+        m_op = std::multiplies<int>();
+        break;
+    case '/':
+        m_op = std::divides<int>();
+        break;
+    default:
+        std::cout << "No such operation: " << m_opType;
+        assert(false);
+    }
 }
 
 std::string MalOp::asString() const
 {
-    return std::string(1, m_op);
+    return std::string(1, m_opType);
 }
 
 MalOp* MalOp::asMalOp()
@@ -246,9 +263,9 @@ MalOp* MalOp::asMalOp()
     return this;
 }
 
-char MalOp::getOp() const
+MalNumber MalOp::applyOp(const MalNumber& lhs, const MalNumber& rhs)
 {
-    return m_op;
+    return m_op(lhs.getValue(), rhs.getValue());
 }
 
 MalError::MalError(const std::string& message)

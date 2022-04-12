@@ -9,42 +9,22 @@ namespace mal {
 std::shared_ptr<MalType> apply(std::shared_ptr<MalType> ast)
 {
     auto malContainer = ast->asMalContainer();
-    assert(malContainer->size() != 0);
+    if (malContainer->size() <= 2) {
+        return std::make_unique<MalError>("Not enough arguments");
+    }
 
-    if (auto firstElem = malContainer->first(); !firstElem->asMalOp()) {
-        if (firstElem->asMalNumber()) {
+    if (auto firstElement = malContainer->at(0).get(); !firstElement->asMalOp()) {
+        if (firstElement->asMalNumber()) {
             return ast;
         }
-        return std::make_shared<MalError>("Operation is not supported");
-    } else {
-        int res = 0;
-        for (auto it = malContainer->begin(); it != malContainer->end(); ++it) {
-            // assume that first element is operation
-            if (std::distance(malContainer->begin(), it) == 0) {
-                continue;
-            }
-
-            const auto currentValue = (*it)->asMalNumber()->getValue();
-            if (std::distance(malContainer->begin(), it) == 1) {
-                res = currentValue;
-                continue;
-            }
-            switch (firstElem->asMalOp()->getOp()) {
-            case '+':
-                res += currentValue;
-                break;
-            case '-':
-                res -= currentValue;
-                break;
-            case '*':
-                res *= currentValue;
-                break;
-            case '/':
-                res /= currentValue;
-                break;
-            }
+        return std::make_unique<MalError>("Operation is not supported");
+    }else {
+        auto op = firstElement->asMalOp();
+        MalNumber res(malContainer->at(1)->asMalNumber()->getValue());
+        for (size_t i = 2; i < malContainer->size(); ++i) {
+            res = op->applyOp(res, *malContainer->at(i)->asMalNumber());
         }
-        return std::make_shared<MalNumber>(res);
+        return std::make_shared<MalNumber>(res.getValue());
     }
     return ast;
 }
