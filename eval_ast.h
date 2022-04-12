@@ -6,7 +6,7 @@
 #include "maltypes.h"
 
 namespace mal {
-std::unique_ptr<MalType> apply(std::unique_ptr<MalType> ast)
+std::shared_ptr<MalType> apply(std::shared_ptr<MalType> ast)
 {
     auto malContainer = ast->asMalContainer();
     assert(malContainer->size() != 0);
@@ -15,7 +15,7 @@ std::unique_ptr<MalType> apply(std::unique_ptr<MalType> ast)
         if (firstElem->asMalNumber()) {
             return ast;
         }
-        return std::make_unique<MalError>("Operation is not supported");
+        return std::make_shared<MalError>("Operation is not supported");
     } else {
         int res = 0;
         for (auto it = malContainer->begin(); it != malContainer->end(); ++it) {
@@ -44,41 +44,41 @@ std::unique_ptr<MalType> apply(std::unique_ptr<MalType> ast)
                 break;
             }
         }
-        return std::make_unique<MalNumber>(res);
+        return std::make_shared<MalNumber>(res);
     }
     return ast;
 }
 
-std::unique_ptr<MalType> eval_ast(std::unique_ptr<MalType> ast, const Env& env);
+std::shared_ptr<MalType> eval_ast(std::shared_ptr<MalType> ast, const Env& env);
 
-std::unique_ptr<MalType> EVAL(std::unique_ptr<MalType> ast, const Env& env)
+std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, const Env& env)
 {
     if (auto container = ast->asMalContainer(); container) {
         if (container->isEmpty()) {
             return ast;
         }
-        return apply(eval_ast(std::move(ast), env));
+        return apply(eval_ast(ast, env));
     }
-    return eval_ast(std::move(ast), env);
+    return eval_ast(ast, env);
 }
 
-std::unique_ptr<MalType> eval_ast(std::unique_ptr<MalType> ast, const Env& env)
+std::shared_ptr<MalType> eval_ast(std::shared_ptr<MalType> ast, const Env& env)
 {
     if (auto container = ast->asMalContainer(); container) {
         if (container->isEmpty()) {
             return ast;
         }
-        auto newContainer = std::make_unique<MalContainer>(container->type());
+        auto newContainer = std::make_shared<MalContainer>(container->type());
         for (auto& element : *container) {
-            newContainer->append(EVAL(std::move(element), env));
+            newContainer->append(EVAL(element, env));
         }
         return newContainer;
     } else if (auto symbol = ast->asMalSymbol(); symbol) {
         return env.find(*symbol);
     } else if (auto hashMap = ast->asMalHashMap(); hashMap) {
-        auto newHashMap = std::make_unique<MalHashMap>();
+        auto newHashMap = std::make_shared<MalHashMap>();
         for (auto& [key, value] : *hashMap) {
-            newHashMap->insert(key, EVAL(std::move(value), env));
+            newHashMap->insert(key, EVAL(value, env));
         }
         return newHashMap;
     }

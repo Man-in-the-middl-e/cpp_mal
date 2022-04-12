@@ -24,14 +24,14 @@ private:
     mutable size_t m_currentIndex { 0 };
 };
 
-std::unique_ptr<MalType> readStr(std::string_view program);
+std::shared_ptr<MalType> readStr(std::string_view program);
 
-std::unique_ptr<MalType> readFrom(const Reader& reader);
-std::unique_ptr<MalType> readAtom(const Reader& reader);
-std::unique_ptr<MalList> readSymobl(const Reader& reader);
+std::shared_ptr<MalType> readFrom(const Reader& reader);
+std::shared_ptr<MalType> readAtom(const Reader& reader);
+std::shared_ptr<MalList> readSymobl(const Reader& reader);
 
 // TODO: make one function for that
-std::unique_ptr<MalList> readList(const Reader& reader);
-std::unique_ptr<MalVector> readVector(const Reader& reader);
-std::unique_ptr<MalHashMap> readHashMap(const Reader& reader);
+std::shared_ptr<MalList> readList(const Reader& reader);
+std::shared_ptr<MalVector> readVector(const Reader& reader);
+std::shared_ptr<MalHashMap> readHashMap(const Reader& reader);
 } // namespace mal

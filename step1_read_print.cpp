@@ -8,20 +8,20 @@
 
 using MalType = mal::MalType;
 
-std::unique_ptr<MalType>
+std::shared_ptr<MalType>
 read(std::string_view program)
 {
     return mal::readStr(program);
 }
 
-std::unique_ptr<MalType>
-eval(std::unique_ptr<MalType> program)
+std::shared_ptr<MalType>
+eval(std::shared_ptr<MalType> program)
 {
     return program;
 }
 
 std::string
-print(std::unique_ptr<MalType> program)
+print(std::shared_ptr<MalType> program)
 {
     return print_st(program.get());
 }

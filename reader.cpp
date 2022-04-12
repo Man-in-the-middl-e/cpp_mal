@@ -21,14 +21,14 @@ Token Reader::peek() const
     return m_tokens[m_currentIndex];
 }
 
-std::unique_ptr<MalType> readStr(std::string_view program)
+std::shared_ptr<MalType> readStr(std::string_view program)
 {
     Lexer lexer(program);
     Reader reader(lexer.tokenize());
     return readFrom(reader);
 }
 
-std::unique_ptr<MalType> readFrom(const Reader& reader)
+std::shared_ptr<MalType> readFrom(const Reader& reader)
 {
     const auto currentTokenType = reader.peek().type;
     switch (currentTokenType) {
@@ -44,24 +44,24 @@ std::unique_ptr<MalType> readFrom(const Reader& reader)
 }
 
 // NOTE: We could return raw pointer, that will be adopted by callers
-std::unique_ptr<MalType> readAtom(const Reader& reader)
+std::shared_ptr<MalType> readAtom(const Reader& reader)
 {
     const auto currentToken = reader.peek();
     switch (currentToken.type) {
     case TokenType::NUMBER:
-        return std::make_unique<MalNumber>(currentToken.token);
+        return std::make_shared<MalNumber>(currentToken.token);
     case TokenType::STRING:
-        return std::make_unique<MalString>(currentToken.token);
+        return std::make_shared<MalString>(currentToken.token);
     case TokenType::ERROR_UNTERMINATED_STRING:
-        return std::make_unique<MalString>();
+        return std::make_shared<MalString>();
     default:
-        return std::make_unique<MalSymbol>(currentToken.token);
+        return std::make_shared<MalSymbol>(currentToken.token);
     }
 }
 
-std::unique_ptr<MalList> readList(const Reader& reader)
+std::shared_ptr<MalList> readList(const Reader& reader)
 {
-    auto malList = std::make_unique<MalList>();
+    auto malList = std::make_shared<MalList>();
     // skip left paren
     reader.next();
 
@@ -73,14 +73,14 @@ std::unique_ptr<MalList> readList(const Reader& reader)
     }
     if (reader.peek().type == TokenType::LAST_TOKEN) {
         std::cout << "unbalanced" << std::endl;
-        return std::make_unique<MalList>();
+        return std::make_shared<MalList>();
     }
     return malList;
 }
 
-std::unique_ptr<MalVector> readVector(const Reader& reader)
+std::shared_ptr<MalVector> readVector(const Reader& reader)
 {
-    auto malVector = std::make_unique<MalVector>();
+    auto malVector = std::make_shared<MalVector>();
     reader.next();
 
     while (reader.peek().type != TokenType::RIGHT_SQUARE_BACE
@@ -91,14 +91,14 @@ std::unique_ptr<MalVector> readVector(const Reader& reader)
     }
     if (reader.peek().type == TokenType::LAST_TOKEN) {
         std::cout << "unbalanced" << std::endl;
-        return std::make_unique<MalVector>();
+        return std::make_shared<MalVector>();
     }
     return malVector;
 }
 
-std::unique_ptr<MalHashMap> readHashMap(const Reader& reader)
+std::shared_ptr<MalHashMap> readHashMap(const Reader& reader)
 {
-    auto malHashMap = std::make_unique<MalHashMap>();
+    auto malHashMap = std::make_shared<MalHashMap>();
     reader.next();
 
     while (reader.peek().type != TokenType::RIGHT_CURLY_BRACE
@@ -107,12 +107,12 @@ std::unique_ptr<MalHashMap> readHashMap(const Reader& reader)
         const std::string key = readAtom(reader)->asString();
         reader.next();
         auto value = readFrom(reader);
-        malHashMap->insert(key, std::move(value));
+        malHashMap->insert(key, value);
         reader.next();
     }
     if (reader.peek().type == TokenType::LAST_TOKEN) {
         std::cout << "unbalanced" << std::endl;
-        return std::make_unique<MalHashMap>();
+        return std::make_shared<MalHashMap>();
     }
     return malHashMap;
 }

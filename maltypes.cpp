@@ -96,17 +96,17 @@ std::string MalContainer::asString() const
     return ss.str();
 }
 
-void MalContainer::append(std::unique_ptr<MalType> element)
+void MalContainer::append(std::shared_ptr<MalType> element)
 {
-    m_data.push_back(std::move(element));
+    m_data.push_back(element);
 }
 
-std::vector<std::unique_ptr<MalType>>::iterator MalContainer::begin()
+std::vector<std::shared_ptr<MalType>>::iterator MalContainer::begin()
 {
     return m_data.begin();
 }
 
-std::vector<std::unique_ptr<MalType>>::iterator MalContainer::end()
+std::vector<std::shared_ptr<MalType>>::iterator MalContainer::end()
 {
     return m_data.end();
 }
@@ -216,9 +216,9 @@ MalHashMap* MalHashMap::asMalHashMap()
     return this;
 }
 
-void MalHashMap::insert(const std::string& key, std::unique_ptr<MalType> value)
+void MalHashMap::insert(const std::string& key, std::shared_ptr<MalType> value)
 {
-    m_hashMap.insert({ key, std::move(value) });
+    m_hashMap.insert({ key, value });
 }
 
 MalHashMap::HashMapIteraotr MalHashMap::begin()

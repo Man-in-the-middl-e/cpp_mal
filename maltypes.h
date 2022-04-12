@@ -57,18 +57,18 @@ public:
     std::string asString() const override;
     MalContainer* asMalContainer() override;
 
-    void append(std::unique_ptr<MalType>);
+    void append(std::shared_ptr<MalType>);
     bool isEmpty() const;
     size_t size() const;
     ContainerType type() const;
 
     MalType* first() const;
 
-    std::vector<std::unique_ptr<MalType>>::iterator begin();
-    std::vector<std::unique_ptr<MalType>>::iterator end();
+    std::vector<std::shared_ptr<MalType>>::iterator begin();
+    std::vector<std::shared_ptr<MalType>>::iterator end();
 
 protected:
-    std::vector<std::unique_ptr<MalType>> m_data;
+    std::vector<std::shared_ptr<MalType>> m_data;
 
 private:
     ContainerType m_type;
@@ -126,19 +126,19 @@ private:
 
 class MalHashMap final : public MalType {
 public:
-    using HashMapIteraotr = std::unordered_map<std::string, std::unique_ptr<MalType>>::iterator;
+    using HashMapIteraotr = std::unordered_map<std::string, std::shared_ptr<MalType>>::iterator;
 
 public:
     std::string asString() const override;
     MalHashMap* asMalHashMap() override;
 
-    void insert(const std::string& key, std::unique_ptr<MalType> value);
+    void insert(const std::string& key, std::shared_ptr<MalType> value);
 
     HashMapIteraotr begin();
     HashMapIteraotr end();
 
 private:
-    std::unordered_map<std::string, std::unique_ptr<MalType>> m_hashMap;
+    std::unordered_map<std::string, std::shared_ptr<MalType>> m_hashMap;
 };
 
 class MalOp final : public MalType {
