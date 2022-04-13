@@ -18,7 +18,7 @@ private:
 };
 
 std::shared_ptr<MalType> eval_ast(std::shared_ptr<MalType> ast,Env& env);
-std::shared_ptr<MalType> apply(std::shared_ptr<MalType> ast, Env& env);
+std::shared_ptr<MalType> apply(std::shared_ptr<MalType> ast);
 std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env);
 
 } // namespace mal

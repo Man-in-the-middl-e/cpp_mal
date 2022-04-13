@@ -40,7 +40,7 @@ std::shared_ptr<MalType> applyDef(std::shared_ptr<MalType> ast, Env& env)
     return envArgumanets;
 }
 
-std::shared_ptr<MalType> apply(std::shared_ptr<MalType> ast, Env& env)
+std::shared_ptr<MalType> apply(std::shared_ptr<MalType> ast)
 {
     if (ast->asMalError()){
         return ast;
@@ -76,7 +76,7 @@ std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env)
         } else if (symbolStr == "let*") {
             return applyLet(ast, env);
         }
-        return apply(eval_ast(ast, env), env);
+        return apply(eval_ast(ast, env));
     }
     return eval_ast(ast, env);
 }
