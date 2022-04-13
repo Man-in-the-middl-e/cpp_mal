@@ -21,7 +21,7 @@ void Env::set(const std::string& key, std::shared_ptr<MalType> value)
 std::shared_ptr<MalType> Env::find(const std::string& key) const
 {
     if (auto env = m_data.find(key); env != m_data.end()) {
-        auto& [key, relatedEnv] = *env;
+        auto& [k, relatedEnv] = *env;
         return relatedEnv;
     }
     

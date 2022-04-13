@@ -11,6 +11,16 @@ std::shared_ptr<MalType> applyLet(std::shared_ptr<MalType> ast, Env& env)
 {
     auto malContainer = ast->asMalContainer();
     assert(malContainer->at(0)->asString() == "let*");
+
+    Env lentEnv(env);
+    auto letArguments = malContainer->at(1)->asMalContainer();
+
+    //EXAMPLE: (let* (p (+ 2 3) q (+ 2 p)) (+ p q))
+    for (size_t i = 0; i < letArguments->size(); i += 2) {
+        lentEnv.set(letArguments->at(i)->asString(), EVAL(letArguments->at(i+1), lentEnv));
+    }
+
+    return EVAL(malContainer->at(2), lentEnv);
 }
 
 std::shared_ptr<MalType> applyDef(std::shared_ptr<MalType> ast, Env& env)
@@ -25,7 +35,8 @@ std::shared_ptr<MalType> applyDef(std::shared_ptr<MalType> ast, Env& env)
     const auto envName = malContainer->at(1)->asString();
     const auto envArgumanets = EVAL(malContainer->at(2), env);
 
-    env.set(envName, envArgumanets);
+    if (!envArgumanets->asMalError())
+        env.set(envName, envArgumanets);
     return envArgumanets;
 }
 
