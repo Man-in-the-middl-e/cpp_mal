@@ -6,6 +6,7 @@
 
 namespace mal {
 
+// TODO: delete unused tokens
 #define TOKEN_TYPE_ENUM(VARIANT) \
     VARIANT(LEFT_SQUARE_BRACE)\
     VARIANT(RIGHT_SQUARE_BACE) \
@@ -33,6 +34,7 @@ namespace mal {
     VARIANT(KEYWORD) \
     VARIANT(SYMBOL) /* all other tokens that are not implementd yet*/ \
     VARIANT(DIVIDE) \
+    VARIANT(FUNCTION) \
     VARIANT(LAST_TOKEN) \
 
 #define TOKEN_TYPE_VARIANT(NAME) NAME,
@@ -64,7 +66,7 @@ private:
     Token matchString();
     Token matchSemicolon();
     Token matchNumber();
-    Token mathcSymbol(bool isKeyword = false);
+    Token matchSymbol(bool isKeyword = false);
 
 private:
     size_t m_currentIndex { 0 };

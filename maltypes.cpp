@@ -131,6 +131,11 @@ std::shared_ptr<MalType> MalContainer::at(size_t index) const
     return m_data[index];
 }
 
+std::shared_ptr<MalType> MalContainer::back() const 
+{
+    return m_data.back();
+}
+
 MalList::MalList()
     : MalContainer(MalContainer::ContainerType::LIST)
 {
@@ -281,4 +286,17 @@ MalError* MalError::asMalError()
 {
     return this;
 }
+
+MalFunction::MalFunction() { }
+
+std::string MalFunction::asString() const
+{
+    return "#<function>";
+}
+
+MalFunction* MalFunction::asMalFunction() 
+{
+    return this;
+}
+
 } // namespace mal

@@ -109,7 +109,7 @@ std::vector<Token> Lexer::tokenize()
             if (isdigit(peek())) {
                 tokens.push_back(matchNumber());
             } else if (isalpha(peek())) {
-                tokens.push_back(mathcSymbol());
+                tokens.push_back(matchSymbol());
             } else {
                 tokens.push_back(makeOneCharToken(TokenType::MINUS));
             }
@@ -136,7 +136,7 @@ std::vector<Token> Lexer::tokenize()
             break;
         }
         case ':': {
-            tokens.push_back(mathcSymbol(true));
+            tokens.push_back(matchSymbol(true));
             break;
         }
         case '"': {
@@ -148,7 +148,7 @@ std::vector<Token> Lexer::tokenize()
             break;
         }
         default: {
-            tokens.push_back(mathcSymbol());
+            tokens.push_back(matchSymbol());
             break;
         }
         }
@@ -226,14 +226,24 @@ Token Lexer::matchNumber()
     return makeToken(TokenType::NUMBER, startPos, m_currentIndex - startPos);
 }
 
-Token Lexer::mathcSymbol(bool isKeyword)
+Token Lexer::matchSymbol(bool isKeyword)
 {
     using namespace std::literals;
     const auto startPos = m_currentIndex - 1;
     auto isSeparator = [](char c) { return " ),"sv.find(c) != std::string_view::npos; };
+    auto is = [this, startPos](std::string_view wordToMatch) {
+        return wordToMatch == m_program.substr(startPos, wordToMatch.size());
+    };
+
     while (!isEnd() && !isSeparator(peek())) {
         advance();
     }
-    return makeToken(isKeyword ? TokenType::KEYWORD : TokenType::SYMBOL, startPos, m_currentIndex - startPos);
+    
+    TokenType symbolType = isKeyword ? TokenType::KEYWORD : TokenType::SYMBOL;
+    if (is("fn*")) {
+        symbolType = TokenType::FUNCTION;
+    }
+
+    return makeToken(symbolType, startPos, m_currentIndex - startPos);
 }
 } // namespace mal

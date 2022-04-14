@@ -17,6 +17,9 @@ class MalString;
 class MalHashMap;
 class MalOp;
 class MalError;
+class MalBoolean;
+class MalNil;
+class MalFunction;
 
 class MalType {
 public:
@@ -29,6 +32,9 @@ public:
     virtual MalHashMap* asMalHashMap() { return nullptr; }
     virtual MalOp* asMalOp() { return nullptr; }
     virtual MalError* asMalError() { return nullptr; }
+    virtual MalBoolean* asMalBoolean() { return nullptr; }
+    virtual MalNil* asMalNil() { return nullptr; }
+    virtual MalFunction* asMalFunction() { return nullptr; }
 
     virtual ~MalType()
     {
@@ -67,6 +73,7 @@ public:
     ContainerType type() const;
 
     std::shared_ptr<MalType> at(size_t index) const;
+    std::shared_ptr<MalType> back() const;
 
     std::vector<std::shared_ptr<MalType>>::iterator begin();
     std::vector<std::shared_ptr<MalType>>::iterator end();
@@ -168,6 +175,14 @@ public:
 
 private:
     std::string m_message;
+};
+
+class MalFunction : public MalType {
+public:
+    MalFunction();
+
+    std::string asString() const override;
+    MalFunction* asMalFunction() override;
 };
 
 } // namespace mal
