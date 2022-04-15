@@ -40,25 +40,11 @@ std::shared_ptr<MalType> applyDef(std::shared_ptr<MalType> ast, Env& env)
     return envArgumanets;
 }
 
-std::shared_ptr<MalType> apply(std::shared_ptr<MalType> ast)
+std::shared_ptr<MalType> applyOp(std::shared_ptr<MalType> ast)
 {
-    if (ast->asMalError()){
-        return ast;
-    }
-    const auto malContainer = ast->asMalContainer();
-
-    if (const auto firstElement = malContainer->at(0).get(); !firstElement->asMalOp()) {
-        if (firstElement->asMalNumber()) {
-            return ast;
-        }
-        return std::make_unique<MalError>("Operation is not supported");
-    } else {
-        const auto op = firstElement->asMalOp();
-        MalNumber res(malContainer->at(1)->asMalNumber()->getValue());
-        for (size_t i = 2; i < malContainer->size(); ++i) {
-            res = op->applyOp(res, *malContainer->at(i)->asMalNumber());
-        }
-        return std::make_shared<MalNumber>(res.getValue());
+    const auto list = ast->asMalContainer();
+    if (const auto op = list->head()->asMalOp(); op) {
+        return op->operator()(list->tail().get());
     }
     return ast;
 }
@@ -76,7 +62,9 @@ std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env)
         } else if (symbolStr == "let*") {
             return applyLet(ast, env);
         }
-        return apply(eval_ast(ast, env));
+        if (const auto element = eval_ast(ast, env); element->asMalContainer()) {
+            return applyOp(element);
+        }
     }
     return eval_ast(ast, env);
 }

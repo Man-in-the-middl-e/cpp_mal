@@ -62,6 +62,7 @@ public:
         VECTOR
     };
 
+    MalContainer(const std::vector<std::shared_ptr<MalType>>& data, MalContainer::ContainerType type);
     MalContainer(ContainerType containerType);
 
     std::string asString() const override;
@@ -74,6 +75,9 @@ public:
 
     std::shared_ptr<MalType> at(size_t index) const;
     std::shared_ptr<MalType> back() const;
+
+    std::shared_ptr<MalType> head() const;
+    std::shared_ptr<MalContainer> tail();
 
     std::vector<std::shared_ptr<MalType>>::iterator begin();
     std::vector<std::shared_ptr<MalType>>::iterator end();
@@ -152,19 +156,6 @@ private:
     std::unordered_map<std::string, std::shared_ptr<MalType>> m_hashMap;
 };
 
-class MalOp final : public MalType {
-public:
-    MalOp(char op);
-
-    std::string asString() const override;
-    MalOp* asMalOp() override;
-
-    MalNumber applyOp(const MalNumber& lhs, const MalNumber& rhs);
-
-private:
-    char m_opType;
-    std::function<int(int, int)> m_op;
-};
 
 class MalError : public MalType {
 public:
@@ -175,6 +166,20 @@ public:
 
 private:
     std::string m_message;
+};
+
+class MalOp final : public MalType {
+public:
+    MalOp(char op);
+
+    std::string asString() const override;
+    MalOp* asMalOp() override;
+
+    std::shared_ptr<MalType> operator()(const MalContainer* arguments);
+
+private:
+    char m_opType;
+    std::function<int(int, int)> m_op;
 };
 
 class MalFunction : public MalType {

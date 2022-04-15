@@ -80,6 +80,12 @@ MalContainer::MalContainer(ContainerType type)
 {
 }
 
+MalContainer::MalContainer(const std::vector<std::shared_ptr<MalType>>& data, MalContainer::ContainerType type)
+    : m_data(data)
+    , m_type(type)
+{
+}
+
 MalContainer* MalContainer::asMalContainer()
 {
     return this;
@@ -136,10 +142,28 @@ std::shared_ptr<MalType> MalContainer::back() const
     return m_data.back();
 }
 
+
+std::shared_ptr<MalType> MalContainer::head() const
+{
+    return m_data.at(0);
+}
+
+std::shared_ptr<MalContainer> MalContainer::tail() 
+{
+    if (m_data.begin() + 1 != m_data.end()) {
+        const std::vector<std::shared_ptr<MalType>> newData(m_data.begin() + 1, m_data.end());
+        m_data = newData;
+    } else {
+        m_data.clear();
+    }
+    return std::make_shared<MalContainer>(m_data, m_type);
+}
+
 MalList::MalList()
     : MalContainer(MalContainer::ContainerType::LIST)
 {
 }
+
 
 MalVector::MalVector()
     : MalContainer(MalContainer::ContainerType::VECTOR)
@@ -267,9 +291,21 @@ MalOp* MalOp::asMalOp()
     return this;
 }
 
-MalNumber MalOp::applyOp(const MalNumber& lhs, const MalNumber& rhs)
+std::shared_ptr<MalType> MalOp::operator()(const MalContainer* arguments)
 {
-    return m_op(lhs.getValue(), rhs.getValue());
+    if (arguments->isEmpty() || arguments->size() == 1) {
+        return std::make_unique<MalError>("Not enough arguments");
+    }
+    if (const auto baseNumber = arguments->head()->asMalNumber(); !baseNumber){
+        return std::make_unique<MalError>("Couldn't apply arithmetic operation to not a number");
+    } else {
+        int res = baseNumber->getValue();
+        for (size_t i = 1; i < arguments->size(); ++i) {
+            const auto currentNumber = arguments->at(i)->asMalNumber()->getValue();
+            res = m_op(res, currentNumber);
+        }
+        return std::make_shared<MalNumber>(res);
+    }
 }
 
 MalError::MalError(const std::string& message)
