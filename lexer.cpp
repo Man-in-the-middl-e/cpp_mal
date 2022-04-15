@@ -231,18 +231,12 @@ Token Lexer::matchSymbol(bool isKeyword)
     using namespace std::literals;
     const auto startPos = m_currentIndex - 1;
     auto isSeparator = [](char c) { return " ),"sv.find(c) != std::string_view::npos; };
-    auto is = [this, startPos](std::string_view wordToMatch) {
-        return wordToMatch == m_program.substr(startPos, wordToMatch.size());
-    };
 
     while (!isEnd() && !isSeparator(peek())) {
         advance();
     }
     
     TokenType symbolType = isKeyword ? TokenType::KEYWORD : TokenType::SYMBOL;
-    if (is("fn*")) {
-        symbolType = TokenType::FUNCTION;
-    }
 
     return makeToken(symbolType, startPos, m_currentIndex - startPos);
 }
