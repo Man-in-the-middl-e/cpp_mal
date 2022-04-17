@@ -128,10 +128,20 @@ std::vector<Token> Lexer::tokenize()
             break;
         }
         case '>': {
+            if (match('=')) {
+                advance();
+                tokens.push_back(makeToken(TokenType::GREATER_THAN_EQUAL, m_currentIndex - 2, 2));
+                break;
+            }
             tokens.push_back(makeOneCharToken(TokenType::GREATER_THAN));
             break;
         }
         case '<': {
+            if (match('=')) {
+                advance();
+                tokens.push_back(makeToken(TokenType::LESS_THAN_EQUAL, m_currentIndex - 2, 2));
+                break;
+            }
             tokens.push_back(makeOneCharToken(TokenType::LESS_THAN));
             break;
         }
