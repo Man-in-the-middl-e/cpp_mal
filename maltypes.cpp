@@ -144,7 +144,11 @@ std::shared_ptr<MalType> MalContainer::back() const
 
 
 std::shared_ptr<MalType> MalContainer::head() const
-{
+{   
+    if (m_data.size() == 0){
+        // TODO: maybe thorw error here
+        return std::make_shared<MalContainer>(m_type);
+    }
     return m_data.at(0);
 }
 
@@ -249,6 +253,11 @@ void MalHashMap::insert(const std::string& key, std::shared_ptr<MalType> value)
     m_hashMap.insert({ key, value });
 }
 
+size_t MalHashMap::size() const
+{
+    return m_hashMap.size();
+}
+
 MalHashMap::HashMapIteraotr MalHashMap::begin()
 {
     return m_hashMap.begin();
@@ -257,6 +266,11 @@ MalHashMap::HashMapIteraotr MalHashMap::begin()
 MalHashMap::HashMapIteraotr MalHashMap::end()
 {
     return m_hashMap.end();
+}
+
+MalHashMap::HashMapIteraotr MalHashMap::find(const std::string& key)
+{
+    return m_hashMap.find(key);
 }
 
 MalOp::MalOp(char op)
@@ -335,4 +349,23 @@ MalFunction* MalFunction::asMalFunction()
     return this;
 }
 
+MalCallable::MalCallable(Callable callable)
+    : m_callableObj(callable)
+{
+}
+
+std::string MalCallable::asString() const 
+{
+    return "";
+}
+
+MalCallable* MalCallable::asMalCallable()
+{
+    return this;
+}
+
+std::shared_ptr<MalType> MalCallable::operator()(MalContainer* args) const 
+{
+    return m_callableObj(args);
+}
 } // namespace mal

@@ -20,6 +20,7 @@ class MalError;
 class MalBoolean;
 class MalNil;
 class MalFunction;
+class MalCallable;
 
 class MalType {
 public:
@@ -35,6 +36,9 @@ public:
     virtual MalBoolean* asMalBoolean() { return nullptr; }
     virtual MalNil* asMalNil() { return nullptr; }
     virtual MalFunction* asMalFunction() { return nullptr; }
+    virtual MalCallable* asMalCallable() { return nullptr; }
+
+    virtual bool operator==(MalType*) const { return false; }
 
     virtual ~MalType()
     {
@@ -48,6 +52,31 @@ public:
 
     std::string asString() const override;
     MalNumber* asMalNumber() override;
+
+    virtual bool operator==(MalType* type) const override
+    {
+        return type->asMalNumber() && type->asMalNumber()->getValue() == m_number;
+    }
+
+    bool operator>(MalNumber* malNumber) const
+    {
+        return m_number > malNumber->getValue();
+    }
+
+    bool operator>=(MalNumber* malNumber) const
+    {
+        return m_number >= malNumber->getValue();
+    }
+
+    bool operator<(MalNumber* malNumber) const
+    {
+        return m_number < malNumber->getValue();
+    }
+
+    bool operator<=(MalNumber* malNumber) const
+    {
+        return m_number <= malNumber->getValue();
+    }
 
     int getValue() const;
 
@@ -67,6 +96,22 @@ public:
 
     std::string asString() const override;
     MalContainer* asMalContainer() override;
+
+    virtual bool operator==(MalType* type) const override
+    {
+        // TODO: Compare only lists and not containers
+        if (auto ls = type->asMalContainer(); ls && ls->size() == m_data.size()) {
+            for (size_t lsIndex = 0; lsIndex < m_data.size(); ++lsIndex) {
+                const auto lhs = m_data[lsIndex];
+                const auto rhs = ls->at(lsIndex);
+                if (!(lhs->operator==(rhs.get()))) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
 
     void append(std::shared_ptr<MalType>);
     bool isEmpty() const;
@@ -118,6 +163,11 @@ public:
     std::string asString() const override;
     MalString* asMalString() override;
 
+    virtual bool operator==(MalType* type) const override
+    {
+        return type->asMalString() && type->asString() == m_malString;
+    }
+
     bool isEmpty() const;
 
 private:
@@ -127,13 +177,23 @@ private:
 class MalNil final : public MalType {
 public:
     std::string asString() const override;
+    virtual bool operator==(MalType* type) const override
+    {
+        return type->asMalNil();
+    }
 };
 
 class MalBoolean final : public MalType {
 public:
     MalBoolean(bool value);
     std::string asString() const override;
+
     bool getValue() const;
+
+    virtual bool operator==(MalType* type) const override
+    {
+        return type->asMalBoolean() && type->asMalBoolean()->getValue() == m_boolValue;
+    }
 
 private:
     const bool m_boolValue;
@@ -147,15 +207,33 @@ public:
     std::string asString() const override;
     MalHashMap* asMalHashMap() override;
 
+    virtual bool operator==(MalType* type) const override
+    {
+        if (auto hashMap = type->asMalHashMap(); hashMap && hashMap->size() == m_hashMap.size()) {
+            for (const auto& [key, value]: m_hashMap) {
+                auto otherElement = hashMap->find(key);
+                if (otherElement != hashMap->end()) {
+                    auto& [otherKey, otherValue] = *otherElement;
+                    if (key != otherKey || !(value->operator==(otherValue.get()))){
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
     void insert(const std::string& key, std::shared_ptr<MalType> value);
+    size_t size() const;
 
     HashMapIteraotr begin();
     HashMapIteraotr end();
+    HashMapIteraotr find(const std::string& key);
 
 private:
     std::unordered_map<std::string, std::shared_ptr<MalType>> m_hashMap;
 };
-
 
 class MalError : public MalType {
 public:
@@ -168,6 +246,7 @@ private:
     std::string m_message;
 };
 
+// TODO: make it callable
 class MalOp final : public MalType {
 public:
     MalOp(char op);
@@ -189,5 +268,21 @@ public:
     std::string asString() const override;
     MalFunction* asMalFunction() override;
 };
+
+class MalCallable : public MalType {
+public:
+    using Callable = std::function<std::shared_ptr<MalType>(MalContainer*)>;
+
+    MalCallable(Callable callable);
+
+    std::string asString() const override;
+    MalCallable* asMalCallable() override;
+
+    std::shared_ptr<MalType> operator()(MalContainer* args) const;
+
+private:
+    Callable m_callableObj;
+};
+
 
 } // namespace mal
