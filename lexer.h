@@ -34,6 +34,8 @@ namespace mal {
     VARIANT(NUMBER) \
     VARIANT(ERROR_UNTERMINATED_STRING) \
     VARIANT(KEYWORD) \
+    VARIANT(BOOLEAN) \
+    VARIANT(NIL) \
     VARIANT(SYMBOL) /* all other tokens that are not implementd yet*/ \
     VARIANT(DIVIDE) \
     VARIANT(LAST_TOKEN) \

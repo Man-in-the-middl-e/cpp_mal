@@ -37,6 +37,8 @@ std::shared_ptr<MalType> count(MalContainer* args)
 {
     if (auto first = args->head(); first->asMalContainer()) {
         return std::make_shared<MalNumber>(first->asMalContainer()->size());
+    } else if (first->asMalNil()){
+        return std::make_shared<MalNumber>(0);
     }
     return std::make_shared<MalNil>();
 }

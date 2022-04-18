@@ -216,14 +216,29 @@ std::string MalNil::asString() const
     return "nil";
 }
 
+MalNil* MalNil::asMalNil()
+{
+    return this;
+}
+
 MalBoolean::MalBoolean(bool value)
     : m_boolValue(value)
+{
+}
+
+MalBoolean::MalBoolean(std::string_view value)
+    : m_boolValue(value == "true")
 {
 }
 
 std::string MalBoolean::asString() const
 {
     return m_boolValue ? "true" : "false";
+}
+
+MalBoolean* MalBoolean::asMalBoolean()
+{
+    return this;
 }
 
 bool MalBoolean::getValue() const

@@ -59,6 +59,10 @@ std::shared_ptr<MalType> readAtom(const Reader& reader)
     case TokenType::MULT:
     case TokenType::DIVIDE:
         return std::make_shared<MalOp>(currentToken.token.at(0));
+    case TokenType::BOOLEAN:
+        return std::make_shared<MalBoolean>(currentToken.token);
+    case TokenType::NIL:
+        return std::make_shared<MalNil>();
     default:
         return std::make_shared<MalSymbol>(currentToken.token);
     }

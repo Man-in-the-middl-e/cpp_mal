@@ -177,6 +177,8 @@ private:
 class MalNil final : public MalType {
 public:
     std::string asString() const override;
+    MalNil* asMalNil() override;
+
     virtual bool operator==(MalType* type) const override
     {
         return type->asMalNil();
@@ -186,7 +188,10 @@ public:
 class MalBoolean final : public MalType {
 public:
     MalBoolean(bool value);
+    MalBoolean(std::string_view strValue);
+
     std::string asString() const override;
+    MalBoolean* asMalBoolean() override;
 
     bool getValue() const;
 
