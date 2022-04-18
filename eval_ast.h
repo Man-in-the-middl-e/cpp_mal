@@ -63,21 +63,17 @@ std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env)
             return applyLet(ast, env);
         }
 
-        const auto element = eval_ast(ast, env);
-        if (auto ls = element->asMalContainer(); ls && !ls->isEmpty()) {
-            if (ls->size() <= 1) {
-                return std::make_unique<MalError>("Not enough arguments");
-            }
-            
+        const auto evaluatedList = eval_ast(ast, env);
+        if (auto ls = evaluatedList->asMalContainer(); ls && !ls->isEmpty()) {
             const auto head = ls->head();
             if (const auto func = head->asMalCallable(); func) {
-                const auto parameters = ast->asMalContainer()->tail();
+                const auto parameters = evaluatedList->asMalContainer()->tail();
                 return func->operator()(parameters.get());
             } else if (head->asMalOp()) {
-                return applyOp(eval_ast(element, env));
+                return applyOp(evaluatedList);
             }
         }
-        return element;
+        return evaluatedList;
     }
     return eval_ast(ast, env);
 }

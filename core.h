@@ -55,8 +55,6 @@ std::shared_ptr<MalType> equal(MalContainer* args)
 
 std::shared_ptr<MalType> compareNumbers(MalContainer* numbers, char op, bool equal = false)
 {
-    std::cout << "GOT" << numbers->asString() << std::endl;
-
     if (numbers->size() <= 1) {
         return std::make_unique<MalError>("Not enough arguments");
     }
