@@ -7,6 +7,16 @@
 
 namespace mal {
 
+std::shared_ptr<MalType> applyDo(std::shared_ptr<MalType> ast, Env& env)
+{
+    if (auto ls = ast->asMalContainer(); ls->size() == 1) {
+        return std::make_unique<MalError>("not enough arguments");
+    } else {
+        auto evaluatedList = eval_ast(ls->tail(), env);
+        return evaluatedList->asMalContainer()->back();
+    }
+}
+
 // (if (cond) (ture branch) (optinal false branch))
 std::shared_ptr<MalType> applyIf(std::shared_ptr<MalType> ast, Env& env)
 {
@@ -88,6 +98,8 @@ std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env)
             return applyLet(ast, env);
         } else if (symbolStr == "if") {
             return applyIf(ast, env);
+        } else if (symbolStr == "do"){
+            return applyDo(ast, env);
         }
 
         const auto evaluatedList = eval_ast(ast, env);
