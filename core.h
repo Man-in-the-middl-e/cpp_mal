@@ -24,6 +24,7 @@ std::shared_ptr<MalType> list(MalContainer* args)
 
 std::shared_ptr<MalType> isList(MalContainer* args)
 {
+    // TODO: use asList()
     return std::make_shared<MalBoolean>(args->head()->asMalContainer() != nullptr);
 }
 
@@ -92,4 +93,4 @@ std::shared_ptr<MalType> greaterEqual(MalContainer* args)
     return compareNumbers(args, '>', true);
 }
 
-}; // mal
+} // mal

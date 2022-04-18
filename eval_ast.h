@@ -7,6 +7,31 @@
 
 namespace mal {
 
+// (if (cond) (ture branch) (optinal false branch))
+std::shared_ptr<MalType> applyIf(std::shared_ptr<MalType> ast, Env& env)
+{
+    auto ls = ast->asMalContainer();
+
+    // if - 1, cond - 1, tureBranch - 1 = 1 + 1 + 1 = 3
+    const size_t numberOfArguments = 3;
+    if (ls->size() < numberOfArguments) {
+        return std::make_unique<MalError>("Not enough arguments for if statement");
+    }
+
+    const auto ifCondition = ls->at(1);
+    const auto res = EVAL(ifCondition, env);
+
+    // NOTE: probaly doing type conversion is faster than creating and comparing strings
+    if (auto resStr = res->asString(); resStr != "nil" && resStr != "false") {
+        const auto trueBranch = ls->at(2);
+        return EVAL(trueBranch, env);
+    } else if (ls->size() > numberOfArguments) {
+        const auto falseBranch = ls->at(3);
+        return EVAL(falseBranch, env);
+    }
+    return std::make_shared<MalNil>();
+}
+
 std::shared_ptr<MalType> applyLet(std::shared_ptr<MalType> ast, Env& env)
 {
     auto malContainer = ast->asMalContainer();
@@ -15,9 +40,9 @@ std::shared_ptr<MalType> applyLet(std::shared_ptr<MalType> ast, Env& env)
     Env lentEnv(env);
     auto letArguments = malContainer->at(1)->asMalContainer();
 
-    //EXAMPLE: (let* (p (+ 2 3) q (+ 2 p)) (+ p q))
+    // EXAMPLE: (let* (p (+ 2 3) q (+ 2 p)) (+ p q))
     for (size_t i = 0; i < letArguments->size(); i += 2) {
-        lentEnv.set(letArguments->at(i)->asString(), EVAL(letArguments->at(i+1), lentEnv));
+        lentEnv.set(letArguments->at(i)->asString(), EVAL(letArguments->at(i + 1), lentEnv));
     }
 
     return EVAL(malContainer->at(2), lentEnv);
@@ -61,6 +86,8 @@ std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env)
             return applyDef(ast, env);
         } else if (symbolStr == "let*") {
             return applyLet(ast, env);
+        } else if (symbolStr == "if") {
+            return applyIf(ast, env);
         }
 
         const auto evaluatedList = eval_ast(ast, env);
@@ -95,7 +122,7 @@ std::shared_ptr<MalType> eval_ast(std::shared_ptr<MalType> ast, Env& env)
         return newContainer;
     } else if (const auto symbol = ast->asMalSymbol(); symbol) {
         const auto relatedEnv = env.find(symbol->asString());
-        if (!relatedEnv){
+        if (!relatedEnv) {
             std::string error = symbol->asString() + " is not defined";
             return std::make_unique<MalError>(error);
         }
