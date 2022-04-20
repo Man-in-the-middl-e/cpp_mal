@@ -7,7 +7,21 @@
 
 namespace mal {
 
-std::shared_ptr<MalType> applyDo(std::shared_ptr<MalType> ast, Env& env)
+std::shared_ptr<MalType> eval_ast(std::shared_ptr<MalType> ast,EnvInterface& env);
+std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, EnvInterface& env);
+
+std::shared_ptr<MalType> applyFunc(std::shared_ptr<MalType> ast, EnvInterface& env)
+{
+    const auto ls = ast->asMalContainer();
+    const auto functionParameters = ls->at(1);
+    const auto functionBody = ls->at(2);
+    if (env.isGlobalEnv()){
+        return std::make_shared<MalClosure>(functionParameters, functionBody);
+    }
+    return std::make_shared<MalClosure>(functionParameters, functionBody, static_cast<FunctionEnv&>(env));
+}
+
+std::shared_ptr<MalType> applyDo(std::shared_ptr<MalType> ast, EnvInterface& env)
 {
     if (auto ls = ast->asMalContainer(); ls->size() == 1) {
         return std::make_unique<MalError>("not enough arguments");
@@ -18,7 +32,7 @@ std::shared_ptr<MalType> applyDo(std::shared_ptr<MalType> ast, Env& env)
 }
 
 // (if (cond) (ture branch) (optinal false branch))
-std::shared_ptr<MalType> applyIf(std::shared_ptr<MalType> ast, Env& env)
+std::shared_ptr<MalType> applyIf(std::shared_ptr<MalType> ast, EnvInterface& env)
 {
     auto ls = ast->asMalContainer();
 
@@ -42,23 +56,23 @@ std::shared_ptr<MalType> applyIf(std::shared_ptr<MalType> ast, Env& env)
     return std::make_shared<MalNil>();
 }
 
-std::shared_ptr<MalType> applyLet(std::shared_ptr<MalType> ast, Env& env)
+std::shared_ptr<MalType> applyLet(std::shared_ptr<MalType> ast)
 {
     auto malContainer = ast->asMalContainer();
     assert(malContainer->at(0)->asString() == "let*");
 
-    Env lentEnv(env);
+    FunctionEnv letEnv;
     auto letArguments = malContainer->at(1)->asMalContainer();
 
     // EXAMPLE: (let* (p (+ 2 3) q (+ 2 p)) (+ p q))
     for (size_t i = 0; i < letArguments->size(); i += 2) {
-        lentEnv.set(letArguments->at(i)->asString(), EVAL(letArguments->at(i + 1), lentEnv));
+        letEnv.set(letArguments->at(i)->asString(), EVAL(letArguments->at(i + 1), letEnv));
     }
 
-    return EVAL(malContainer->at(2), lentEnv);
+    return EVAL(malContainer->at(2), letEnv);
 }
 
-std::shared_ptr<MalType> applyDef(std::shared_ptr<MalType> ast, Env& env)
+std::shared_ptr<MalType> applyDef(std::shared_ptr<MalType> ast, EnvInterface& env)
 {
     const auto malContainer = ast->asMalContainer();
     assert(malContainer->at(0)->asString() == "def!");
@@ -68,11 +82,12 @@ std::shared_ptr<MalType> applyDef(std::shared_ptr<MalType> ast, Env& env)
     }
 
     const auto envName = malContainer->at(1)->asString();
-    const auto envArgumanets = EVAL(malContainer->at(2), env);
+    const auto envArguments = EVAL(malContainer->at(2), env);
 
-    if (!envArgumanets->asMalError())
-        env.set(envName, envArgumanets);
-    return envArgumanets;
+    if (!envArguments->asMalError()) {
+        env.set(envName, envArguments);
+    }
+    return envArguments;
 }
 
 std::shared_ptr<MalType> applyOp(std::shared_ptr<MalType> ast)
@@ -84,27 +99,31 @@ std::shared_ptr<MalType> applyOp(std::shared_ptr<MalType> ast)
     return ast;
 }
 
-std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env)
+std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, EnvInterface& env)
 {
     if (const auto container = ast->asMalContainer(); container) {
         if (container->isEmpty()) {
             return ast;
         }
 
-        // `def!` and `let*` are special atoms, so we need to evluate the differently
         if (const auto symbolStr = container->at(0)->asString(); symbolStr == "def!") {
             return applyDef(ast, env);
         } else if (symbolStr == "let*") {
-            return applyLet(ast, env);
+            return applyLet(ast);
         } else if (symbolStr == "if") {
             return applyIf(ast, env);
         } else if (symbolStr == "do"){
             return applyDo(ast, env);
+        } else if (symbolStr == "fn*"){
+            return applyFunc(ast, env);
         }
 
         const auto evaluatedList = eval_ast(ast, env);
         if (auto ls = evaluatedList->asMalContainer(); ls && !ls->isEmpty()) {
             const auto head = ls->head();
+            if (const auto closure = head->asMalClosure(); closure){
+                return closure->operator()(ls->tail().get());
+            }
             if (const auto func = head->asMalCallable(); func) {
                 const auto parameters = evaluatedList->asMalContainer()->tail();
                 return func->operator()(parameters.get());
@@ -117,7 +136,7 @@ std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env)
     return eval_ast(ast, env);
 }
 
-std::shared_ptr<MalType> eval_ast(std::shared_ptr<MalType> ast, Env& env)
+std::shared_ptr<MalType> eval_ast(std::shared_ptr<MalType> ast, EnvInterface& env)
 {
     if (const auto container = ast->asMalContainer(); container) {
         if (container->isEmpty()) {

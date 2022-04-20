@@ -49,7 +49,7 @@ std::string unescapeString(std::string_view str)
 }
 }
 namespace mal {
-
+std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, EnvInterface& env);
 MalNumber::MalNumber(std::string_view number)
     : m_number(std::atoi(number.data()))
 {
@@ -352,16 +352,34 @@ MalError* MalError::asMalError()
     return this;
 }
 
-MalFunction::MalFunction() { }
+MalClosure::MalClosure(const std::shared_ptr<MalType> parameters, const std::shared_ptr<MalType> body)
+    : m_functionParameters(parameters)
+    , m_functionBody(body)
+{
+}
 
-std::string MalFunction::asString() const
+MalClosure::MalClosure(const std::shared_ptr<MalType> parameters, const std::shared_ptr<MalType> body, FunctionEnv& env)
+    : m_functionParameters(parameters)
+    , m_functionBody(body)
+    , m_funcEnv(env)
+{
+}
+
+std::string MalClosure::asString() const
 {
     return "#<function>";
 }
 
-MalFunction* MalFunction::asMalFunction() 
+MalClosure* MalClosure::asMalClosure()
 {
     return this;
+}
+
+std::shared_ptr<MalType> MalClosure::operator()(const MalContainer* arguments)
+{
+    m_funcEnv.setBindings(m_functionParameters->asMalContainer(), arguments);
+    auto res = EVAL(m_functionBody, m_funcEnv);
+    return res;
 }
 
 MalCallable::MalCallable(Callable callable)

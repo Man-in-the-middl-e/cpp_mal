@@ -7,6 +7,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "env.h"
+
 namespace mal {
 enum class TokenType : char;
 
@@ -19,7 +21,7 @@ class MalOp;
 class MalError;
 class MalBoolean;
 class MalNil;
-class MalFunction;
+class MalClosure;
 class MalCallable;
 
 class MalType {
@@ -35,7 +37,7 @@ public:
     virtual MalError* asMalError() { return nullptr; }
     virtual MalBoolean* asMalBoolean() { return nullptr; }
     virtual MalNil* asMalNil() { return nullptr; }
-    virtual MalFunction* asMalFunction() { return nullptr; }
+    virtual MalClosure* asMalClosure() { return nullptr; }
     virtual MalCallable* asMalCallable() { return nullptr; }
 
     virtual bool operator==(MalType*) const { return false; }
@@ -266,12 +268,20 @@ private:
     std::function<int(int, int)> m_op;
 };
 
-class MalFunction : public MalType {
+class MalClosure : public MalType {
 public:
-    MalFunction();
+    MalClosure(const std::shared_ptr<MalType> parameters, const std::shared_ptr<MalType> body);
+    MalClosure(const std::shared_ptr<MalType> parameters, const std::shared_ptr<MalType> body, FunctionEnv& outerEnv);
 
     std::string asString() const override;
-    MalFunction* asMalFunction() override;
+    MalClosure* asMalClosure() override;
+
+    std::shared_ptr<MalType> operator()(const MalContainer* arguments);
+    
+private:
+    const std::shared_ptr<MalType> m_functionParameters;
+    const std::shared_ptr<MalType> m_functionBody;
+    FunctionEnv m_funcEnv;
 };
 
 class MalCallable : public MalType {
