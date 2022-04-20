@@ -18,7 +18,7 @@ read(std::string_view program)
 std::shared_ptr<MalType>
 eval(std::shared_ptr<MalType> ast)
 {
-    static mal::Env env;
+    static auto& env = mal::GlobalEnv::instance();
     return EVAL(ast, env);
 }
 
