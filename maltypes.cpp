@@ -358,13 +358,6 @@ MalClosure::MalClosure(const std::shared_ptr<MalType> parameters, const std::sha
 {
 }
 
-MalClosure::MalClosure(const std::shared_ptr<MalType> parameters, const std::shared_ptr<MalType> body, FunctionEnv& env)
-    : m_functionParameters(parameters)
-    , m_functionBody(body)
-    , m_funcEnv(env)
-{
-}
-
 std::string MalClosure::asString() const
 {
     return "#<function>";
@@ -375,11 +368,11 @@ MalClosure* MalClosure::asMalClosure()
     return this;
 }
 
-std::shared_ptr<MalType> MalClosure::operator()(const MalContainer* arguments)
+std::shared_ptr<MalType> MalClosure::operator()(const MalContainer* arguments, const EnvInterface& parentEnv)
 {
-    m_funcEnv.setBindings(m_functionParameters->asMalContainer(), arguments);
-    auto res = EVAL(m_functionBody, m_funcEnv);
-    return res;
+    FunctionEnv newEnv(parentEnv);
+    newEnv.setBindings(m_functionParameters->asMalContainer(), arguments);
+    return EVAL(m_functionBody, newEnv);
 }
 
 MalCallable::MalCallable(Callable callable)

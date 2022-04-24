@@ -31,9 +31,9 @@ std::shared_ptr<MalType> GlobalEnv::find(const std::string& key) const
     return nullptr;
 }
 
-FunctionEnv::FunctionEnv(const FunctionEnv& newEnv)
+FunctionEnv::FunctionEnv(const EnvInterface& parentEnv)
+    : m_parentEnv(parentEnv.isGlobalEnv() ? GlobalEnv::instance() : parentEnv)
 {
-    m_data = static_cast<const FunctionEnv&>(newEnv).m_data;
 }
 
 void FunctionEnv::setBindings(const MalContainer* binds, const MalContainer* exprs)
@@ -54,6 +54,11 @@ std::shared_ptr<MalType> FunctionEnv::find(const std::string& key) const
         return relatedEnv;
     }
 
+    if (auto env = m_parentEnv.find(key); env != nullptr) {
+        return env;
+    }
+
+    // NOTE: maybe we don't need global env
     if (auto env = GlobalEnv::instance().find(key); env != nullptr) {
         return env;
     }

@@ -34,8 +34,7 @@ private:
 
 class FunctionEnv : public EnvInterface {
 public:
-    FunctionEnv() = default;
-    FunctionEnv(const FunctionEnv& newEnv);
+    FunctionEnv(const EnvInterface& parentEnv);
 
     void setBindings(const MalContainer* binds, const MalContainer* exprs);
 
@@ -45,6 +44,7 @@ public:
 
 private:
     std::unordered_map<std::string, std::shared_ptr<MalType>> m_data;
+    const EnvInterface& m_parentEnv;
 };
 
 } // namespace mal
