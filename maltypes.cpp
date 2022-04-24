@@ -48,8 +48,11 @@ std::string unescapeString(std::string_view str)
     return ss.str();
 }
 }
+
 namespace mal {
-std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, EnvInterface& env);
+// NOTE: possible ABI breakage
+std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env);
+
 MalNumber::MalNumber(std::string_view number)
     : m_number(std::atoi(number.data()))
 {
@@ -137,22 +140,21 @@ std::shared_ptr<MalType> MalContainer::at(size_t index) const
     return m_data[index];
 }
 
-std::shared_ptr<MalType> MalContainer::back() const 
+std::shared_ptr<MalType> MalContainer::back() const
 {
     return m_data.back();
 }
 
-
 std::shared_ptr<MalType> MalContainer::head() const
-{   
-    if (m_data.size() == 0){
+{
+    if (m_data.size() == 0) {
         // TODO: maybe thorw error here
         return std::make_shared<MalContainer>(m_type);
     }
     return m_data.at(0);
 }
 
-std::shared_ptr<MalContainer> MalContainer::tail() 
+std::shared_ptr<MalContainer> MalContainer::tail()
 {
     if (m_data.begin() + 1 != m_data.end()) {
         const std::vector<std::shared_ptr<MalType>> newData(m_data.begin() + 1, m_data.end());
@@ -167,7 +169,6 @@ MalList::MalList()
     : MalContainer(MalContainer::ContainerType::LIST)
 {
 }
-
 
 MalVector::MalVector()
     : MalContainer(MalContainer::ContainerType::VECTOR)
@@ -325,7 +326,7 @@ std::shared_ptr<MalType> MalOp::operator()(const MalContainer* arguments)
     if (arguments->isEmpty() || arguments->size() == 1) {
         return std::make_unique<MalError>("Not enough arguments");
     }
-    if (const auto baseNumber = arguments->head()->asMalNumber(); !baseNumber){
+    if (const auto baseNumber = arguments->head()->asMalNumber(); !baseNumber) {
         return std::make_unique<MalError>("Couldn't apply arithmetic operation to not a number");
     } else {
         int res = baseNumber->getValue();
@@ -347,7 +348,7 @@ std::string MalError::asString() const
     return "ERROR: " + m_message;
 }
 
-MalError* MalError::asMalError() 
+MalError* MalError::asMalError()
 {
     return this;
 }
@@ -368,9 +369,9 @@ MalClosure* MalClosure::asMalClosure()
     return this;
 }
 
-std::shared_ptr<MalType> MalClosure::operator()(const MalContainer* arguments, const EnvInterface& parentEnv)
+std::shared_ptr<MalType> MalClosure::operator()(const MalContainer* arguments, const Env& parentEnv)
 {
-    FunctionEnv newEnv(parentEnv);
+    Env newEnv(parentEnv);
     newEnv.setBindings(m_functionParameters->asMalContainer(), arguments);
     return EVAL(m_functionBody, newEnv);
 }
@@ -380,7 +381,7 @@ MalCallable::MalCallable(Callable callable)
 {
 }
 
-std::string MalCallable::asString() const 
+std::string MalCallable::asString() const
 {
     return "";
 }
@@ -390,7 +391,7 @@ MalCallable* MalCallable::asMalCallable()
     return this;
 }
 
-std::shared_ptr<MalType> MalCallable::operator()(MalContainer* args) const 
+std::shared_ptr<MalType> MalCallable::operator()(MalContainer* args) const
 {
     return m_callableObj(args);
 }

@@ -1,42 +1,36 @@
 #include "env.h"
 #include "maltypes.h"
 
-#include <iostream>
-
 namespace mal {
 
-EnvInterface::~EnvInterface()
-{
-}
-
-GlobalEnv::GlobalEnv()
-{
+Env::Env(const Env*  parentEnv) : m_parentEnv(parentEnv) {
+    // TODO: move it to setUpBuildins()
     m_data.insert({ "+", std::make_shared<MalOp>('+') });
     m_data.insert({ "-", std::make_shared<MalOp>('-') });
     m_data.insert({ "*", std::make_shared<MalOp>('*') });
     m_data.insert({ "/", std::make_shared<MalOp>('/') });
 }
 
-void GlobalEnv::set(const std::string& key, std::shared_ptr<MalType> value)
+void Env::set(const std::string& key, std::shared_ptr<MalType> value)
 {
     m_data[key] = value;
 }
 
-std::shared_ptr<MalType> GlobalEnv::find(const std::string& key) const
+std::shared_ptr<MalType> Env::find(const std::string& key) const
 {
     if (auto env = m_data.find(key); env != m_data.end()) {
         auto& [k, relatedEnv] = *env;
         return relatedEnv;
     }
+
+    if (m_parentEnv){
+        return m_parentEnv->find(key);
+    }
+
     return nullptr;
 }
 
-FunctionEnv::FunctionEnv(const EnvInterface& parentEnv)
-    : m_parentEnv(parentEnv.isGlobalEnv() ? GlobalEnv::instance() : parentEnv)
-{
-}
-
-void FunctionEnv::setBindings(const MalContainer* binds, const MalContainer* exprs)
+void Env::setBindings(const MalContainer* binds, const MalContainer* exprs)
 {
     if (binds && exprs && binds->size() == exprs->size()) {
         for (size_t argCount = 0; argCount < binds->size(); ++argCount) {
@@ -47,32 +41,4 @@ void FunctionEnv::setBindings(const MalContainer* binds, const MalContainer* exp
     }
 }
 
-std::shared_ptr<MalType> FunctionEnv::find(const std::string& key) const
-{
-    if (auto env = m_data.find(key); env != m_data.end()) {
-        auto& [k, relatedEnv] = *env;
-        return relatedEnv;
-    }
-
-    if (auto env = m_parentEnv.find(key); env != nullptr) {
-        return env;
-    }
-
-    // NOTE: maybe we don't need global env
-    if (auto env = GlobalEnv::instance().find(key); env != nullptr) {
-        return env;
-    }
-
-    return nullptr;
-}
-
-void FunctionEnv::set(const std::string& key, std::shared_ptr<MalType> value)
-{
-    m_data[key] = value;
-}
-
-bool FunctionEnv::isGlobalEnv() const
-{
-    return false;
-}
 } // namespace mal

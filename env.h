@@ -7,44 +7,17 @@ namespace mal {
 class MalType;
 class MalContainer;
 
-class EnvInterface {
+class Env {
 public:
-    virtual void set(const std::string& key, std::shared_ptr<MalType> value) = 0;
-    virtual std::shared_ptr<MalType> find(const std::string& key) const = 0;
-    virtual bool isGlobalEnv() const { return true; }
-    virtual ~EnvInterface();
-};
+    Env(const Env* parentEnv = nullptr);
 
-class GlobalEnv : public EnvInterface {
-public:
-    void set(const std::string& key, std::shared_ptr<MalType> value) override;
-    std::shared_ptr<MalType> find(const std::string& key) const override;
-    static GlobalEnv& instance()
-    {
-        static GlobalEnv env;
-        return env;
-    }
-
-private:
-    GlobalEnv();
-
-private:
-    std::unordered_map<std::string, std::shared_ptr<MalType>> m_data;
-};
-
-class FunctionEnv : public EnvInterface {
-public:
-    FunctionEnv(const EnvInterface& parentEnv);
-
+    void set(const std::string& key, std::shared_ptr<MalType> value);
+    std::shared_ptr<MalType> find(const std::string& key) const;
     void setBindings(const MalContainer* binds, const MalContainer* exprs);
 
-    std::shared_ptr<MalType> find(const std::string& key) const override;
-    void set(const std::string& key, std::shared_ptr<MalType> value) override;
-    bool isGlobalEnv() const override;
-
 private:
     std::unordered_map<std::string, std::shared_ptr<MalType>> m_data;
-    const EnvInterface& m_parentEnv;
+    const Env* m_parentEnv;
 };
 
 } // namespace mal

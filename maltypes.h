@@ -275,7 +275,7 @@ public:
     std::string asString() const override;
     MalClosure* asMalClosure() override;
 
-    std::shared_ptr<MalType> operator()(const MalContainer* arguments, const EnvInterface& parentEnv);
+    std::shared_ptr<MalType> operator()(const MalContainer* arguments, const Env& parentEnv);
     
 private:
     const std::shared_ptr<MalType> m_functionParameters;

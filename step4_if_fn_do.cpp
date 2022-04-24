@@ -33,7 +33,7 @@ read(std::string_view program)
 }
 
 std::shared_ptr<MalType>
-eval(std::shared_ptr<MalType> ast, mal::EnvInterface& env)
+eval(std::shared_ptr<MalType> ast, mal::Env& env)
 {
     return EVAL(ast, env);
 }
@@ -45,14 +45,14 @@ print(std::shared_ptr<MalType> program)
 }
 
 std::string
-rep(std::string_view program, mal::EnvInterface& env)
+rep(std::string_view program, mal::Env& env)
 {
     return print(eval(read(program), env));
 }
 
 int main()
 {
-    static mal::EnvInterface& env = mal::GlobalEnv::instance();
+    static mal::Env env;
     for (const auto& [key, value] : setUpBuildins()) {
         env.set(key, value);
     }

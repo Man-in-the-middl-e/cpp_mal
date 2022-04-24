@@ -7,8 +7,8 @@
 
 namespace mal {
 
-std::shared_ptr<MalType> eval_ast(std::shared_ptr<MalType> ast, EnvInterface& env);
-std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, EnvInterface& env);
+std::shared_ptr<MalType> eval_ast(std::shared_ptr<MalType> ast, Env& env);
+std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env);
 
 std::shared_ptr<MalType> applyFunc(std::shared_ptr<MalType> ast)
 {
@@ -18,7 +18,7 @@ std::shared_ptr<MalType> applyFunc(std::shared_ptr<MalType> ast)
     return std::make_shared<MalClosure>(functionParameters, functionBody);
 }
 
-std::shared_ptr<MalType> applyDo(std::shared_ptr<MalType> ast, EnvInterface& env)
+std::shared_ptr<MalType> applyDo(std::shared_ptr<MalType> ast, Env& env)
 {
     if (auto ls = ast->asMalContainer(); ls->size() == 1) {
         return std::make_unique<MalError>("not enough arguments");
@@ -29,7 +29,7 @@ std::shared_ptr<MalType> applyDo(std::shared_ptr<MalType> ast, EnvInterface& env
 }
 
 // (if (cond) (ture branch) (optinal false branch))
-std::shared_ptr<MalType> applyIf(std::shared_ptr<MalType> ast, EnvInterface& env)
+std::shared_ptr<MalType> applyIf(std::shared_ptr<MalType> ast, Env& env)
 {
     auto ls = ast->asMalContainer();
 
@@ -53,12 +53,12 @@ std::shared_ptr<MalType> applyIf(std::shared_ptr<MalType> ast, EnvInterface& env
     return std::make_shared<MalNil>();
 }
 
-std::shared_ptr<MalType> applyLet(std::shared_ptr<MalType> ast, const EnvInterface& env)
+std::shared_ptr<MalType> applyLet(std::shared_ptr<MalType> ast, const Env& env)
 {
     auto malContainer = ast->asMalContainer();
     assert(malContainer->at(0)->asString() == "let*");
 
-    FunctionEnv letEnv(env);
+    Env letEnv(env);
     auto letArguments = malContainer->at(1)->asMalContainer();
 
     // EXAMPLE: (let* (p (+ 2 3) q (+ 2 p)) (+ p q))
@@ -69,7 +69,7 @@ std::shared_ptr<MalType> applyLet(std::shared_ptr<MalType> ast, const EnvInterfa
     return EVAL(malContainer->at(2), letEnv);
 }
 
-std::shared_ptr<MalType> applyDef(std::shared_ptr<MalType> ast, EnvInterface& env)
+std::shared_ptr<MalType> applyDef(std::shared_ptr<MalType> ast, Env& env)
 {
     const auto malContainer = ast->asMalContainer();
     assert(malContainer->at(0)->asString() == "def!");
@@ -96,7 +96,7 @@ std::shared_ptr<MalType> applyOp(std::shared_ptr<MalType> ast)
     return ast;
 }
 
-std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, EnvInterface& env)
+std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env)
 {
     if (const auto container = ast->asMalContainer(); container) {
         if (container->isEmpty()) {
@@ -133,7 +133,7 @@ std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, EnvInterface& env)
     return eval_ast(ast, env);
 }
 
-std::shared_ptr<MalType> eval_ast(std::shared_ptr<MalType> ast, EnvInterface& env)
+std::shared_ptr<MalType> eval_ast(std::shared_ptr<MalType> ast, Env& env)
 {
     if (const auto container = ast->asMalContainer(); container) {
         if (container->isEmpty()) {
@@ -154,7 +154,6 @@ std::shared_ptr<MalType> eval_ast(std::shared_ptr<MalType> ast, EnvInterface& en
             std::string error = symbol->asString() + " is not defined";
             return std::make_unique<MalError>(error);
         }
-        std::cout << "FOUND: " << symbol->asString() << std::endl;
         return relatedEnv;
     } else if (const auto hashMap = ast->asMalHashMap(); hashMap) {
         auto newHashMap = std::make_shared<MalHashMap>();
