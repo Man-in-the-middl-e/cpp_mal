@@ -1,6 +1,8 @@
 #include "env.h"
 #include "maltypes.h"
 
+#include <iostream>
+
 namespace mal {
 
 Env::Env(const Env*  parentEnv) : m_parentEnv(parentEnv) {
@@ -30,13 +32,29 @@ std::shared_ptr<MalType> Env::find(const std::string& key) const
     return nullptr;
 }
 
-void Env::setBindings(const MalContainer* binds, const MalContainer* exprs)
+void Env::setBindings(const MalContainer* parameters, const MalContainer* arguments)
 {
-    if (binds && exprs && binds->size() == exprs->size()) {
-        for (size_t argCount = 0; argCount < binds->size(); ++argCount) {
-            const auto currentArgument = binds->at(argCount)->asString();
-            const auto boundedValue = exprs->at(argCount);
-            set(currentArgument, boundedValue);
+    for (size_t parameterIndex = 0; parameterIndex < parameters->size(); ++parameterIndex) {
+        const auto currentParameter = parameters->at(parameterIndex)->asString();
+    
+        // (& paramName) bound name to all arguments that left
+        // (fn* (a & paramName) (+ a count paramName))(1 2 3) -> a = 1 paramName = (2, 3)
+        if (currentParameter == "&") {
+            auto allOtherArgs = std::make_shared<MalList>();
+            for (size_t vaArgs = parameterIndex; vaArgs < arguments->size(); ++vaArgs){
+                allOtherArgs->append(arguments->at(vaArgs));
+            }
+            if (parameterIndex + 1 == parameters->size()) {
+                std::cout << "Expected parameter pack name after `&`\n";
+                return;
+            }
+            const auto allOtherArgsName = parameters->at(parameterIndex + 1)->asString();
+            set(allOtherArgsName, allOtherArgs);
+            return;
+        }
+        if (parameterIndex < arguments->size()) {
+            const auto currentArgument = arguments->at(parameterIndex);
+            set(currentParameter, currentArgument);
         }
     }
 }
