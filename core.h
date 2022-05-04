@@ -24,8 +24,8 @@ std::shared_ptr<MalType> list(MalContainer* args)
 
 std::shared_ptr<MalType> isList(MalContainer* args)
 {
-    // TODO: use asList()
-    return std::make_shared<MalBoolean>(args->head()->asMalContainer() != nullptr);
+    const auto list = args->head()->asMalContainer();
+    return std::make_shared<MalBoolean>(list != nullptr && list->type() == MalContainer::ContainerType::LIST);
 }
 
 std::shared_ptr<MalType> isEmpty(MalContainer* args)
