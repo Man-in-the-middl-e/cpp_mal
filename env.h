@@ -10,6 +10,7 @@ class MalContainer;
 class Env {
 public:
     Env(const Env* parentEnv = nullptr);
+    Env(const Env& parentEnv);
 
     void set(const std::string& key, std::shared_ptr<MalType> value);
     std::shared_ptr<MalType> find(const std::string& key) const;

@@ -353,9 +353,10 @@ MalError* MalError::asMalError()
     return this;
 }
 
-MalClosure::MalClosure(const std::shared_ptr<MalType> parameters, const std::shared_ptr<MalType> body)
+MalClosure::MalClosure(const std::shared_ptr<MalType> parameters, const std::shared_ptr<MalType> body, const Env& parentEnv)
     : m_functionParameters(parameters)
     , m_functionBody(body)
+    , m_relatedEnv(parentEnv)
 {
 }
 
@@ -369,9 +370,9 @@ MalClosure* MalClosure::asMalClosure()
     return this;
 }
 
-std::shared_ptr<MalType> MalClosure::operator()(const MalContainer* arguments, const Env& parentEnv)
+std::shared_ptr<MalType> MalClosure::operator()(const MalContainer* arguments)
 {
-    Env newEnv(parentEnv);
+    Env newEnv(&m_relatedEnv);
     newEnv.setBindings(m_functionParameters->asMalContainer(), arguments);
     return EVAL(m_functionBody, newEnv);
 }

@@ -5,6 +5,16 @@
 
 namespace mal {
 
+Env::Env(const Env& parentEvn)
+{
+    for (const auto& [key, value] : parentEvn.m_data) {
+        if (auto itElem = m_data.find(key); itElem == m_data.end()) {
+            m_data.insert({key, value});
+        }
+    }
+    m_parentEnv = &parentEvn;
+}
+
 Env::Env(const Env*  parentEnv) : m_parentEnv(parentEnv) {
     // TODO: move it to setUpBuildins()
     m_data.insert({ "+", std::make_shared<MalOp>('+') });
