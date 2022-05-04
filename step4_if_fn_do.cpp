@@ -21,7 +21,8 @@ std::unordered_map<std::string, std::shared_ptr<mal::MalCallable>> setUpBuildins
         { "<", std::make_shared<mal::MalCallable>(mal::less) },
         { "<=", std::make_shared<mal::MalCallable>(mal::lessEqual) },
         { ">", std::make_shared<mal::MalCallable>(mal::greater) },
-        { ">=", std::make_shared<mal::MalCallable>(mal::greaterEqual) }
+        { ">=", std::make_shared<mal::MalCallable>(mal::greaterEqual) },
+        { "not", std::make_shared<mal::MalCallable>(mal::malNot) }
     };
     return buildins;
 }

@@ -88,9 +88,19 @@ std::shared_ptr<MalType> greater(MalContainer* args)
 {
     return compareNumbers(args, '>');
 }
+
 std::shared_ptr<MalType> greaterEqual(MalContainer* args)
 {
     return compareNumbers(args, '>', true);
+}
+
+std::shared_ptr<MalType> malNot(MalContainer* args)
+{
+    if (args->isEmpty()) {
+        return std::make_unique<MalError>("Not enough argumetns for not operator");
+    }
+    const auto predicate = args->at(0)->asString();
+    return std::make_shared<MalBoolean>(predicate == "nil" || predicate == "false");
 }
 
 } // mal

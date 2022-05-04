@@ -7,6 +7,7 @@ namespace mal {
 
 Env::Env(const Env& parentEvn)
 {
+    // NOTE: mb it's not very efficient
     for (const auto& [key, value] : parentEvn.m_data) {
         if (auto itElem = m_data.find(key); itElem == m_data.end()) {
             m_data.insert({key, value});
