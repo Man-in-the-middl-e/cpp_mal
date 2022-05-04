@@ -91,7 +91,7 @@ std::shared_ptr<MalType> applyOp(std::shared_ptr<MalType> ast)
 {
     const auto list = ast->asMalContainer();
     if (const auto op = list->head()->asMalOp(); op) {
-        return op->operator()(list->tail().get());
+        return op->apply(list->tail().get());
     }
     return ast;
 }
@@ -119,11 +119,11 @@ std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env)
         if (auto ls = evaluatedList->asMalContainer(); ls && !ls->isEmpty()) {
             const auto head = ls->head();
             if (const auto closure = head->asMalClosure(); closure) {
-                return closure->operator()(ls->tail().get());
+                return closure->apply(ls->tail().get());
             }
             if (const auto func = head->asMalCallable(); func) {
                 const auto parameters = evaluatedList->asMalContainer()->tail();
-                return func->operator()(parameters.get());
+                return func->apply(parameters.get());
             } else if (head->asMalOp()) {
                 return applyOp(evaluatedList);
             }

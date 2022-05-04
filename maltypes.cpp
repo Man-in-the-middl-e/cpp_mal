@@ -321,7 +321,7 @@ MalOp* MalOp::asMalOp()
     return this;
 }
 
-std::shared_ptr<MalType> MalOp::operator()(const MalContainer* arguments)
+std::shared_ptr<MalType> MalOp::apply(const MalContainer* arguments)
 {
     if (arguments->isEmpty() || arguments->size() == 1) {
         return std::make_unique<MalError>("Not enough arguments");
@@ -370,7 +370,7 @@ MalClosure* MalClosure::asMalClosure()
     return this;
 }
 
-std::shared_ptr<MalType> MalClosure::operator()(const MalContainer* arguments)
+std::shared_ptr<MalType> MalClosure::apply(const MalContainer* arguments)
 {
     Env newEnv(&m_relatedEnv);
     newEnv.setBindings(m_functionParameters->asMalContainer(), arguments);
@@ -392,7 +392,7 @@ MalCallable* MalCallable::asMalCallable()
     return this;
 }
 
-std::shared_ptr<MalType> MalCallable::operator()(MalContainer* args) const
+std::shared_ptr<MalType> MalCallable::apply(MalContainer* args) const
 {
     return m_callableObj(args);
 }

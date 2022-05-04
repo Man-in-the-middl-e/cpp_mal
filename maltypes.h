@@ -261,7 +261,7 @@ public:
     std::string asString() const override;
     MalOp* asMalOp() override;
 
-    std::shared_ptr<MalType> operator()(const MalContainer* arguments);
+    std::shared_ptr<MalType> apply(const MalContainer* arguments);
 
 private:
     char m_opType;
@@ -275,7 +275,7 @@ public:
     std::string asString() const override;
     MalClosure* asMalClosure() override;
 
-    std::shared_ptr<MalType> operator()(const MalContainer* arguments);
+    std::shared_ptr<MalType> apply(const MalContainer* arguments);
     
 private:
     const std::shared_ptr<MalType> m_functionParameters;
@@ -292,7 +292,7 @@ public:
     std::string asString() const override;
     MalCallable* asMalCallable() override;
 
-    std::shared_ptr<MalType> operator()(MalContainer* args) const;
+    std::shared_ptr<MalType> apply(MalContainer* args) const;
 
 private:
     Callable m_callableObj;
