@@ -29,3 +29,8 @@ if (${STEP} STREQUAL "step4")
     return()
 endif()
 
+if (${STEP} STREQUAL "step5")
+    add_executable(step5_tco step5_tco.cpp lexer.cpp reader.cpp maltypes.cpp env.cpp)
+    return()
+endif()
+
