@@ -15,22 +15,27 @@ if (${STEP} STREQUAL "step1")
 endif()
 
 if (${STEP} STREQUAL "step2")
-    add_executable(step2_eval step2_eval.cpp lexer.cpp reader.cpp maltypes.cpp env.cpp)
+    add_executable(step2_eval step2_eval.cpp lexer.cpp reader.cpp maltypes.cpp env.cpp eval_ast.cpp)
     return()
 endif()
 
 if (${STEP} STREQUAL "step3")
-    add_executable(step3_env step3_env.cpp lexer.cpp reader.cpp maltypes.cpp env.cpp)
+    add_executable(step3_env step3_env.cpp lexer.cpp reader.cpp maltypes.cpp env.cpp eval_ast.cpp)
     return()
 endif()
 
 if (${STEP} STREQUAL "step4")
-    add_executable(step4_if_fn_do step4_if_fn_do.cpp lexer.cpp reader.cpp maltypes.cpp env.cpp)
+    add_executable(step4_if_fn_do step4_if_fn_do.cpp lexer.cpp reader.cpp maltypes.cpp env.cpp eval_ast.cpp)
     return()
 endif()
 
 if (${STEP} STREQUAL "step5")
-    add_executable(step5_tco step5_tco.cpp lexer.cpp reader.cpp maltypes.cpp env.cpp)
+    add_executable(step5_tco step5_tco.cpp lexer.cpp reader.cpp maltypes.cpp env.cpp eval_ast.cpp)
+    return()
+endif()
+
+if (${STEP} STREQUAL "step6")
+    add_executable(step6_file step6_file.cpp lexer.cpp reader.cpp maltypes.cpp env.cpp eval_ast.cpp)
     return()
 endif()
 

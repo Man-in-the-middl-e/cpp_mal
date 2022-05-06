@@ -1,10 +1,11 @@
 #include "maltypes.h"
 
+#include "eval_ast.h"
+#include "lexer.h"
+
 #include <cassert>
 #include <iostream>
 #include <sstream>
-
-#include "lexer.h"
 
 namespace {
 std::string unescapeString(std::string_view str)
@@ -50,8 +51,6 @@ std::string unescapeString(std::string_view str)
 }
 
 namespace mal {
-// NOTE: possible ABI breakage
-std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env);
 
 MalNumber::MalNumber(std::string_view number)
     : m_number(std::atoi(number.data()))
