@@ -92,9 +92,7 @@ std::vector<Token> Lexer::tokenize()
             if (match('*')) {
                 advance();
                 tokens.push_back(makeToken(TokenType::DOUBLE_STAR, m_currentIndex - 2, 2));
-                break;
             }
-            tokens.push_back(makeOneCharToken(TokenType::MULT));
             break;
         }
         case '^': {
@@ -110,17 +108,7 @@ std::vector<Token> Lexer::tokenize()
                 tokens.push_back(matchNumber());
             } else if (isalpha(peek())) {
                 tokens.push_back(matchSymbol());
-            } else {
-                tokens.push_back(makeOneCharToken(TokenType::MINUS));
             }
-            break;
-        }
-        case '+': {
-            tokens.push_back(makeOneCharToken(TokenType::PLUS));
-            break;
-        }
-        case '/': {
-            tokens.push_back(makeOneCharToken(TokenType::DIVIDE));
             break;
         }
         case '=': {

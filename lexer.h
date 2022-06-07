@@ -20,9 +20,6 @@ namespace mal {
     VARIANT(TILDE) \
     VARIANT(CARET) \
     VARIANT(AT) \
-    VARIANT(PLUS) \
-    VARIANT(MINUS) \
-    VARIANT(MULT) \
     VARIANT(DOUBLE_STAR) \
     VARIANT(EQUAL) \
     VARIANT(GREATER_THAN) \
@@ -37,7 +34,6 @@ namespace mal {
     VARIANT(BOOLEAN) \
     VARIANT(NIL) \
     VARIANT(SYMBOL) /* all other tokens that are not implementd yet*/ \
-    VARIANT(DIVIDE) \
     VARIANT(LAST_TOKEN) \
 
 #define TOKEN_TYPE_VARIANT(NAME) NAME,

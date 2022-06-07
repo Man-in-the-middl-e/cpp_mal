@@ -71,14 +71,6 @@ std::shared_ptr<MalType> applyDef(const MalContainer* ls, Env& env)
     return envArguments;
 }
 
-std::shared_ptr<MalType> applyOp(MalContainer* ls)
-{
-    if (const auto op = ls->head()->asMalOp(); op) {
-        return op->apply(ls->tail().get());
-    }
-    return nullptr;
-}
-
 std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env)
 {
     if (const auto container = ast->asMalContainer(); container) {
@@ -104,11 +96,9 @@ std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env)
             if (const auto closure = head->asMalClosure(); closure) {
                 return closure->apply(ls->tail().get());
             }
-            if (const auto func = head->asMalCallable(); func) {
+            else if (const auto func = head->asMalCallable(); func) {
                 const auto parameters = evaluatedList->asMalContainer()->tail();
                 return func->apply(parameters.get());
-            } else if (head->asMalOp()) {
-                return applyOp(ls);
             }
         }
         return evaluatedList;

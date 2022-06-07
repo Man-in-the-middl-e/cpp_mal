@@ -288,55 +288,6 @@ MalHashMap::HashMapIteraotr MalHashMap::find(const std::string& key)
     return m_hashMap.find(key);
 }
 
-MalOp::MalOp(char op)
-    : m_opType(op)
-{
-    switch (m_opType) {
-    case '+':
-        m_op = std::plus<int>();
-        break;
-    case '-':
-        m_op = std::minus<int>();
-        break;
-    case '*':
-        m_op = std::multiplies<int>();
-        break;
-    case '/':
-        m_op = std::divides<int>();
-        break;
-    default:
-        std::cout << "No such operation: " << m_opType;
-        assert(false);
-    }
-}
-
-std::string MalOp::asString() const
-{
-    return std::string(1, m_opType);
-}
-
-MalOp* MalOp::asMalOp()
-{
-    return this;
-}
-
-std::shared_ptr<MalType> MalOp::apply(const MalContainer* arguments)
-{
-    if (arguments->isEmpty() || arguments->size() == 1) {
-        return std::make_unique<MalError>("Not enough arguments");
-    }
-    if (const auto baseNumber = arguments->head()->asMalNumber(); !baseNumber) {
-        return std::make_unique<MalError>("Couldn't apply arithmetic operation to not a number");
-    } else {
-        int res = baseNumber->getValue();
-        for (size_t i = 1; i < arguments->size(); ++i) {
-            const auto currentNumber = arguments->at(i)->asMalNumber()->getValue();
-            res = m_op(res, currentNumber);
-        }
-        return std::make_shared<MalNumber>(res);
-    }
-}
-
 MalError::MalError(const std::string& message)
     : m_message(message)
 {
@@ -395,4 +346,5 @@ std::shared_ptr<MalType> MalCallable::apply(MalContainer* args) const
 {
     return m_callableObj(args);
 }
+
 } // namespace mal

@@ -16,12 +16,9 @@ Env::Env(const Env& parentEvn)
     m_parentEnv = &parentEvn;
 }
 
-Env::Env(const Env*  parentEnv) : m_parentEnv(parentEnv) {
-    // TODO: move it to setUpBuildins()
-    m_data.insert({ "+", std::make_shared<MalOp>('+') });
-    m_data.insert({ "-", std::make_shared<MalOp>('-') });
-    m_data.insert({ "*", std::make_shared<MalOp>('*') });
-    m_data.insert({ "/", std::make_shared<MalOp>('/') });
+Env::Env(const Env* parentEnv)
+    : m_parentEnv(parentEnv)
+{
 }
 
 void Env::set(const std::string& key, std::shared_ptr<MalType> value)

@@ -17,7 +17,6 @@ class MalContainer;
 class MalSymbol;
 class MalString;
 class MalHashMap;
-class MalOp;
 class MalError;
 class MalBoolean;
 class MalNil;
@@ -33,7 +32,6 @@ public:
     virtual MalSymbol* asMalSymbol() { return nullptr; }
     virtual MalString* asMalString() { return nullptr; }
     virtual MalHashMap* asMalHashMap() { return nullptr; }
-    virtual MalOp* asMalOp() { return nullptr; }
     virtual MalError* asMalError() { return nullptr; }
     virtual MalBoolean* asMalBoolean() { return nullptr; }
     virtual MalNil* asMalNil() { return nullptr; }
@@ -251,21 +249,6 @@ public:
 
 private:
     std::string m_message;
-};
-
-// TODO: make it callable
-class MalOp final : public MalType {
-public:
-    MalOp(char op);
-
-    std::string asString() const override;
-    MalOp* asMalOp() override;
-
-    std::shared_ptr<MalType> apply(const MalContainer* arguments);
-
-private:
-    char m_opType;
-    std::function<int(int, int)> m_op;
 };
 
 class MalClosure : public MalType {
