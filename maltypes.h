@@ -269,17 +269,19 @@ private:
 class MalCallable : public MalType {
 public:
     using Callable = std::function<std::shared_ptr<MalType>(MalContainer*)>;
+    using CallableWithEnv = std::function<std::shared_ptr<MalType>(MalContainer*, Env&)>;
 
     MalCallable(Callable callable);
+    MalCallable(CallableWithEnv callableWithEnv);
 
     std::string asString() const override;
     MalCallable* asMalCallable() override;
 
-    std::shared_ptr<MalType> apply(MalContainer* args) const;
+    std::shared_ptr<MalType> apply(MalContainer* args, Env& env) const;
 
 private:
-    Callable m_callableObj;
+    Callable m_callable;
+    CallableWithEnv m_callableWithEnv;
 };
-
 
 } // namespace mal

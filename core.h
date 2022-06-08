@@ -2,8 +2,11 @@
 
 #include "maltypes.h"
 #include "printer.h"
+#include "eval_ast.h"
+#include "reader.h"
 
 #include <functional>
+#include <fstream>
 
 namespace mal {
 
@@ -139,6 +142,51 @@ std::shared_ptr<MalType> divides(MalContainer* args)
 std::shared_ptr<MalType> multiplies(MalContainer* args)
 {
     return applyArithmeticOperations(args, std::multiplies<int>());
+}
+
+std::shared_ptr<MalType> readString(MalContainer* args, Env&)
+{
+    if (args->isEmpty()) {
+        return std::make_unique<MalError>("read-string <string>");
+    }
+    const auto progWithQuotes = args->at(0)->asString();
+
+    const auto prog = progWithQuotes.substr(1, progWithQuotes.size() - 2);
+    return mal::readStr(prog);
+}
+
+std::shared_ptr<MalType> slurp(MalContainer* args, Env&)
+{
+    if (args->isEmpty()) {
+        return std::make_unique<MalError>("slurp expect file name");
+    }
+
+    const auto fileNameWitQuotes = args->at(0)->asString();
+    // remove quotes
+    const auto fileName = fileNameWitQuotes.substr(1, fileNameWitQuotes.size() - 2);
+    std::ifstream is(fileName, std::ios::in);
+    if (is.is_open()) {
+        std::stringstream buffer;
+        buffer << is.rdbuf();
+        // TODO: create separate type?
+        return std::make_shared<MalSymbol>(buffer.str());
+    }
+
+    return std::make_unique<MalError>("Couldn't open the file");
+}
+
+std::shared_ptr<MalType> eval(MalContainer* args, Env& env)
+{
+    if (args->isEmpty()) {
+        return std::make_unique<MalError>("eval <ast>");
+    }
+    // TODO: make copy ctor
+    // TODO: don't create new container
+    auto newContaienr = std::make_shared<MalContainer>(args->type());
+    for (const auto& elem : *args){
+        newContaienr->append(elem);
+    }
+    return EVAL(newContaienr, env);
 }
 
 } // mal

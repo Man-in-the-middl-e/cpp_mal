@@ -18,6 +18,11 @@ std::unordered_map<std::string, std::shared_ptr<mal::MalCallable>> setUpBuildins
         { "list?", std::make_shared<mal::MalCallable>(mal::isList) },
         { "empty?", std::make_shared<mal::MalCallable>(mal::isEmpty) },
         { "count", std::make_shared<mal::MalCallable>(mal::count) },
+        { "eval", std::make_shared<mal::MalCallable>(mal::eval) },
+        { "read-string", std::make_shared<mal::MalCallable>(mal::readString) },
+        { "slurp", std::make_shared<mal::MalCallable>(mal::slurp) },
+        { "not", std::make_shared<mal::MalCallable>(mal::malNot)},
+
         { "=", std::make_shared<mal::MalCallable>(mal::equal) },
         { "<", std::make_shared<mal::MalCallable>(mal::less) },
         { "<=", std::make_shared<mal::MalCallable>(mal::lessEqual) },
@@ -26,7 +31,7 @@ std::unordered_map<std::string, std::shared_ptr<mal::MalCallable>> setUpBuildins
         { "+", std::make_shared<mal::MalCallable>(mal::plus) },
         { "-", std::make_shared<mal::MalCallable>(mal::minus) },
         { "/", std::make_shared<mal::MalCallable>(mal::divides) },
-        { "*", std::make_shared<mal::MalCallable>(mal::multiplies) },
+        { "*", std::make_shared<mal::MalCallable>(mal::multiplies) }
     };
     return buildins;
 }

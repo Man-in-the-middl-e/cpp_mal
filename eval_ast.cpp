@@ -98,7 +98,7 @@ std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env)
             }
             else if (const auto func = head->asMalCallable(); func) {
                 const auto parameters = evaluatedList->asMalContainer()->tail();
-                return func->apply(parameters.get());
+                return func->apply(parameters.get(), env);
             }
         }
         return evaluatedList;

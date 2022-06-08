@@ -328,7 +328,12 @@ std::shared_ptr<MalType> MalClosure::apply(const MalContainer* arguments)
 }
 
 MalCallable::MalCallable(Callable callable)
-    : m_callableObj(callable)
+    : m_callable(std::move(callable))
+{
+}
+
+MalCallable::MalCallable(CallableWithEnv callableWithEnv)
+    : m_callableWithEnv(std::move(callableWithEnv))
 {
 }
 
@@ -342,9 +347,13 @@ MalCallable* MalCallable::asMalCallable()
     return this;
 }
 
-std::shared_ptr<MalType> MalCallable::apply(MalContainer* args) const
+std::shared_ptr<MalType> MalCallable::apply(MalContainer* args, Env& env) const
 {
-    return m_callableObj(args);
+    if (m_callable)
+    {
+        return m_callable(args);
+    }
+    return m_callableWithEnv(args, env);
 }
 
 } // namespace mal
