@@ -4,7 +4,7 @@
 
 #include <sstream>
 
-std::string escapeString(const std::string& str)
+static std::string escapeString(const std::string& str)
 {
     std::stringstream ss;
     ss << '"';
@@ -25,7 +25,7 @@ std::string escapeString(const std::string& str)
     return ss.str();
 }
 
-std::string print_st(mal::MalType* malObject, bool printReadably = true)
+static std::string print_st(mal::MalType* malObject, bool printReadably = true)
 {
     if (auto malStr = malObject->asMalString(); malStr && printReadably) {
         return malStr->isEmpty() ? malStr->asString() : escapeString(malStr->asString());

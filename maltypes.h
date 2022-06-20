@@ -253,12 +253,12 @@ private:
 
 class MalClosure : public MalType {
 public:
-    MalClosure(const std::shared_ptr<MalType> parameters, const std::shared_ptr<MalType> body, const Env& parentEnv);
+    MalClosure(const std::shared_ptr<MalType> parameters, const std::shared_ptr<MalType> body);
 
     std::string asString() const override;
     MalClosure* asMalClosure() override;
 
-    std::shared_ptr<MalType> apply(const MalContainer* arguments);
+    std::shared_ptr<MalType> apply(const MalContainer* arguments, Env& env);
     
 private:
     const std::shared_ptr<MalType> m_functionParameters;

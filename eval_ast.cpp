@@ -4,11 +4,11 @@
 
 namespace mal {
 
-std::shared_ptr<MalType> applyFunc(const MalContainer* ls, Env& env)
+std::shared_ptr<MalType> applyFunc(const MalContainer* ls)
 {
     const auto functionParameters = ls->at(1);
     const auto functionBody = ls->at(2);
-    return std::make_shared<MalClosure>(functionParameters, functionBody, env);
+    return std::make_shared<MalClosure>(functionParameters, functionBody);
 }
 
 std::shared_ptr<MalType> applyDo(MalContainer* ls, Env& env)
@@ -43,7 +43,7 @@ std::shared_ptr<MalType> applyIf(const MalContainer* ls, Env& env)
     return std::make_shared<MalNil>();
 }
 
-std::shared_ptr<MalType> applyLet(const MalContainer* ls, const Env& env)
+std::shared_ptr<MalType> applyLet(const MalContainer* ls, Env& env)
 {
     Env letEnv(env);
     auto letArguments = ls->at(1)->asMalContainer();
@@ -87,14 +87,14 @@ std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env)
         } else if (symbolStr == "do") {
             return applyDo(container, env);
         } else if (symbolStr == "fn*") {
-            return applyFunc(container, env);
+            return applyFunc(container);
         }
 
         const auto evaluatedList = eval_ast(ast, env);
         if (auto ls = evaluatedList->asMalContainer(); ls && !ls->isEmpty()) {
             const auto head = ls->head();
             if (const auto closure = head->asMalClosure(); closure) {
-                return closure->apply(ls->tail().get());
+                return closure->apply(ls->tail().get(), env);
             }
             else if (const auto func = head->asMalCallable(); func) {
                 const auto parameters = evaluatedList->asMalContainer()->tail();

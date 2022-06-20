@@ -1,24 +1,54 @@
 #include "env.h"
+#include "buildins.h"
 #include "maltypes.h"
 
 #include <iostream>
 
 namespace mal {
 
-Env::Env(const Env& parentEvn)
+GlobalEnv::GlobalEnv()
 {
-    // NOTE: mb it's not very efficient
-    for (const auto& [key, value] : parentEvn.m_data) {
-        if (auto itElem = m_data.find(key); itElem == m_data.end()) {
-            m_data.insert({key, value});
-        }
-    }
-    m_parentEnv = &parentEvn;
+    m_buildins = {
+        { "prn", std::make_shared<MalCallable>(prn) },
+        { "list", std::make_shared<MalCallable>(list) },
+        { "list?", std::make_shared<MalCallable>(isList) },
+        { "empty?", std::make_shared<MalCallable>(isEmpty) },
+        { "count", std::make_shared<MalCallable>(count) },
+        { "eval", std::make_shared<MalCallable>(eval) },
+        { "read-string", std::make_shared<MalCallable>(readString) },
+        { "slurp", std::make_shared<MalCallable>(slurp) },
+        { "not", std::make_shared<MalCallable>(malNot) },
+
+        { "=", std::make_shared<MalCallable>(equal) },
+        { "<", std::make_shared<MalCallable>(less) },
+        { "<=", std::make_shared<MalCallable>(lessEqual) },
+        { ">", std::make_shared<MalCallable>(greater) },
+        { ">=", std::make_shared<MalCallable>(greaterEqual) },
+        { "+", std::make_shared<MalCallable>(plus) },
+        { "-", std::make_shared<MalCallable>(minus) },
+        { "/", std::make_shared<MalCallable>(divides) },
+        { "*", std::make_shared<MalCallable>(multiplies) }
+    };
 }
 
-Env::Env(const Env* parentEnv)
-    : m_parentEnv(parentEnv)
+GlobalEnv& GlobalEnv::the()
 {
+    static GlobalEnv env;
+    return env;
+}
+
+std::shared_ptr<MalType> GlobalEnv::find(const std::string& key) const
+{
+    if (auto env = m_buildins.find(key); env != m_buildins.end()) {
+        auto& [k, relatedEnv] = *env;
+        return relatedEnv;
+    }
+    return nullptr;
+}
+
+Env::Env(Env* parentEvn)
+{
+    parentEnv = parentEvn;
 }
 
 void Env::set(const std::string& key, std::shared_ptr<MalType> value)
@@ -32,24 +62,25 @@ std::shared_ptr<MalType> Env::find(const std::string& key) const
         auto& [k, relatedEnv] = *env;
         return relatedEnv;
     }
-
-    if (m_parentEnv){
-        return m_parentEnv->find(key);
+    if (parentEnv) {
+        auto res = parentEnv->find(key);
+        if (res != nullptr) {
+            return res;
+        }
     }
-
-    return nullptr;
+    return GlobalEnv::the().find(key);
 }
 
 void Env::setBindings(const MalContainer* parameters, const MalContainer* arguments)
 {
     for (size_t parameterIndex = 0; parameterIndex < parameters->size(); ++parameterIndex) {
         const auto currentParameter = parameters->at(parameterIndex)->asString();
-    
+
         // (& paramName) bound name to all arguments that left
         // (fn* (a & paramName) (+ a count paramName))(1 2 3) -> a = 1 paramName = (2, 3)
         if (currentParameter == "&") {
             auto allOtherArgs = std::make_shared<MalList>();
-            for (size_t vaArgs = parameterIndex; vaArgs < arguments->size(); ++vaArgs){
+            for (size_t vaArgs = parameterIndex; vaArgs < arguments->size(); ++vaArgs) {
                 allOtherArgs->append(arguments->at(vaArgs));
             }
             if (parameterIndex + 1 == parameters->size()) {
@@ -65,6 +96,20 @@ void Env::setBindings(const MalContainer* parameters, const MalContainer* argume
             set(currentParameter, currentArgument);
         }
     }
+}
+
+void Env::addToEnv(Env& newEnv)
+{
+    for (const auto& [key, value] : newEnv.m_data) {
+        if (auto itElem = m_data.find(key); itElem == m_data.end()) {
+            m_data.insert({ key, value });
+        }
+    }
+}
+
+bool Env::isEmpty() const
+{
+    return m_data.empty();
 }
 
 } // namespace mal

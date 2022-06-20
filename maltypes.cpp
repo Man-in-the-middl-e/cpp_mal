@@ -303,10 +303,9 @@ MalError* MalError::asMalError()
     return this;
 }
 
-MalClosure::MalClosure(const std::shared_ptr<MalType> parameters, const std::shared_ptr<MalType> body, const Env& parentEnv)
+MalClosure::MalClosure(const std::shared_ptr<MalType> parameters, const std::shared_ptr<MalType> body)
     : m_functionParameters(parameters)
     , m_functionBody(body)
-    , m_relatedEnv(parentEnv)
 {
 }
 
@@ -320,11 +319,16 @@ MalClosure* MalClosure::asMalClosure()
     return this;
 }
 
-std::shared_ptr<MalType> MalClosure::apply(const MalContainer* arguments)
+std::shared_ptr<MalType> MalClosure::apply(const MalContainer* arguments, Env& env)
 {
-    Env newEnv(&m_relatedEnv);
+    Env newEnv(m_relatedEnv.isEmpty() ? env : m_relatedEnv);
     newEnv.setBindings(m_functionParameters->asMalContainer(), arguments);
-    return EVAL(m_functionBody, newEnv);
+    auto res = EVAL(m_functionBody, newEnv);
+    
+    if (auto closure = res->asMalClosure(); closure) {
+        closure->m_relatedEnv.addToEnv(newEnv);
+    }
+    return res;
 }
 
 MalCallable::MalCallable(Callable callable)

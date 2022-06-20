@@ -1,12 +1,13 @@
-#pragma once
+#include "buildins.h"
 
+#include "eval_ast.h"
 #include "maltypes.h"
 #include "printer.h"
-#include "eval_ast.h"
 #include "reader.h"
 
-#include <functional>
 #include <fstream>
+#include <functional>
+#include <iostream>
 
 namespace mal {
 
@@ -15,15 +16,15 @@ std::shared_ptr<MalType> compareNumbers(MalContainer* numbers, char op, bool equ
     if (numbers->size() <= 1) {
         return std::make_unique<MalError>("Not enough arguments");
     }
-    
+
     auto lhs = numbers->at(0)->asMalNumber();
     auto rhs = numbers->at(1)->asMalNumber();
 
     if (lhs && rhs) {
         bool res = false;
-        if (op == '>'){
+        if (op == '>') {
             res = equal ? lhs->operator>=(rhs) : lhs->operator>(rhs);
-        } else if (op == '<'){
+        } else if (op == '<') {
             res = equal ? lhs->operator<=(rhs) : lhs->operator<(rhs);
         }
         return std::make_shared<MalBoolean>(res);
@@ -79,7 +80,7 @@ std::shared_ptr<MalType> count(MalContainer* args)
 {
     if (auto first = args->head(); first->asMalContainer()) {
         return std::make_shared<MalNumber>(first->asMalContainer()->size());
-    } else if (first->asMalNil()){
+    } else if (first->asMalNil()) {
         return std::make_shared<MalNumber>(0);
     }
     return std::make_shared<MalNil>();
@@ -183,7 +184,7 @@ std::shared_ptr<MalType> eval(MalContainer* args, Env& env)
     // TODO: make copy ctor
     // TODO: don't create new container
     auto newContaienr = std::make_shared<MalContainer>(args->type());
-    for (const auto& elem : *args){
+    for (const auto& elem : *args) {
         newContaienr->append(elem);
     }
     return EVAL(newContaienr, env);
