@@ -2,10 +2,10 @@
 #include <string>
 #include <string_view>
 
+#include "eval_ast.h"
 #include "maltypes.h"
 #include "printer.h"
 #include "reader.h"
-#include "eval_ast.h"
 
 using MalType = mal::MalType;
 
@@ -16,9 +16,8 @@ read(std::string_view program)
 }
 
 std::shared_ptr<MalType>
-eval(std::shared_ptr<MalType> ast)
+eval(std::shared_ptr<MalType> ast, mal::Env& env)
 {
-    static auto& env = mal::GlobalEnv::instance();
     return EVAL(ast, env);
 }
 
@@ -29,16 +28,17 @@ print(std::shared_ptr<MalType> program)
 }
 
 std::string
-rep(std::string_view program)
+rep(std::string_view program, mal::Env& env)
 {
-    return print(eval(read(program)));
+    return print(eval(read(program), env));
 }
 
 int main()
 {
+    static mal::Env env;
     std::cout << "user> ";
     for (std::string currentLine; std::getline(std::cin, currentLine);) {
-        std::cout << rep(currentLine) << "\n";
+        std::cout << rep(currentLine, env) << "\n";
         std::cout << "user> ";
     }
 }
