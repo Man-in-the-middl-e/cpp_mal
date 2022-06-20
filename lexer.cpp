@@ -6,14 +6,17 @@
 
 namespace mal {
 
-const char* printToken(TokenType type){
-    #define TOKEN_TYPE_STR(NAME) case TokenType::NAME : return #NAME;
-    switch(type) {
+const char* printToken(TokenType type)
+{
+#define TOKEN_TYPE_STR(NAME) \
+    case TokenType::NAME:    \
+        return #NAME;
+    switch (type) {
         TOKEN_TYPE_ENUM(TOKEN_TYPE_STR)
-        default:
-            return "UNKONWN";
+    default:
+        return "UNKONWN";
     }
-    #undef TOKEN_TYPE_STR
+#undef TOKEN_TYPE_STR
 }
 
 std::ostream& operator<<(std::ostream& stream, TokenType type)
@@ -83,15 +86,17 @@ std::vector<Token> Lexer::tokenize()
             if (match('@')) {
                 advance();
                 tokens.push_back(makeToken(TokenType::TILDE_AT, m_currentIndex - 2, 2));
-                break;
+            } else {
+                tokens.push_back(makeOneCharToken(TokenType::TILDE));
             }
-            tokens.push_back(makeOneCharToken(TokenType::TILDE));
             break;
         }
         case '*': {
             if (match('*')) {
                 advance();
                 tokens.push_back(makeToken(TokenType::DOUBLE_STAR, m_currentIndex - 2, 2));
+            } else {
+                tokens.push_back(makeOneCharToken(TokenType::SYMBOL));
             }
             break;
         }
@@ -106,35 +111,31 @@ std::vector<Token> Lexer::tokenize()
         case '-': {
             if (isdigit(peek())) {
                 tokens.push_back(matchNumber());
-            } else if (isalpha(peek())) {
-                tokens.push_back(matchSymbol());
+            } else {
+                tokens.push_back(makeOneCharToken(TokenType::SYMBOL));
             }
             break;
         }
         case '=': {
-            tokens.push_back(makeOneCharToken(TokenType::EQUAL));
+            tokens.push_back(makeOneCharToken(TokenType::SYMBOL));
             break;
         }
         case '>': {
             if (match('=')) {
                 advance();
-                tokens.push_back(makeToken(TokenType::GREATER_THAN_EQUAL, m_currentIndex - 2, 2));
-                break;
+                tokens.push_back(makeToken(TokenType::SYMBOL, m_currentIndex - 2, 2));
+            } else {
+                tokens.push_back(makeOneCharToken(TokenType::SYMBOL));
             }
-            tokens.push_back(makeOneCharToken(TokenType::GREATER_THAN));
             break;
         }
         case '<': {
             if (match('=')) {
                 advance();
-                tokens.push_back(makeToken(TokenType::LESS_THAN_EQUAL, m_currentIndex - 2, 2));
-                break;
+                tokens.push_back(makeToken(TokenType::SYMBOL, m_currentIndex - 2, 2));
+            } else {
+                tokens.push_back(makeOneCharToken(TokenType::SYMBOL));
             }
-            tokens.push_back(makeOneCharToken(TokenType::LESS_THAN));
-            break;
-        }
-        case ':': {
-            tokens.push_back(matchSymbol(true));
             break;
         }
         case '"': {
@@ -146,7 +147,7 @@ std::vector<Token> Lexer::tokenize()
             break;
         }
         default: {
-            tokens.push_back(matchSymbol());
+            tokens.push_back(matchEverythingElse(currentSymbol == ':'));
             break;
         }
         }
@@ -191,12 +192,12 @@ Token Lexer::matchString()
     while (!isEnd()) {
         //  Two backslashes will be transformed to one`//` -> `/`,
         //  so we don't want to treat transformed backslash as an escape char.
-        num = m_program[m_currentIndex -1] == '\\' ? num + 1 : 0;
-        if (!(peek() !='"' || ((num % 2 != 0) && m_program[m_currentIndex - 1] == '\\')))
+        num = m_program[m_currentIndex - 1] == '\\' ? num + 1 : 0;
+        if (!(peek() != '"' || ((num % 2 != 0) && m_program[m_currentIndex - 1] == '\\')))
             break;
         advance();
     }
-    
+
     auto tokenType = TokenType::ERROR_UNTERMINATED_STRING;
     if (match('"')) {
         advance();
@@ -224,7 +225,7 @@ Token Lexer::matchNumber()
     return makeToken(TokenType::NUMBER, startPos, m_currentIndex - startPos);
 }
 
-Token Lexer::matchSymbol(bool isKeyword)
+Token Lexer::matchEverythingElse(bool isKeyword)
 {
     using namespace std::literals;
     const auto startPos = m_currentIndex - 1;
@@ -236,7 +237,7 @@ Token Lexer::matchSymbol(bool isKeyword)
     while (!isEnd() && !isSeparator(peek())) {
         advance();
     }
-    
+
     TokenType symbolType = isKeyword ? TokenType::KEYWORD : TokenType::SYMBOL;
 
     if (is("true") || is("false")) {

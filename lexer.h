@@ -21,11 +21,6 @@ namespace mal {
     VARIANT(CARET) \
     VARIANT(AT) \
     VARIANT(DOUBLE_STAR) \
-    VARIANT(EQUAL) \
-    VARIANT(GREATER_THAN) \
-    VARIANT(GREATER_THAN_EQUAL) \
-    VARIANT(LESS_THAN) \
-    VARIANT(LESS_THAN_EQUAL) \
     VARIANT(TILDE_AT) /* ~@ */ \
     VARIANT(STRING) \
     VARIANT(NUMBER) \
@@ -65,7 +60,7 @@ private:
     Token matchString();
     Token matchSemicolon();
     Token matchNumber();
-    Token matchSymbol(bool isKeyword = false);
+    Token matchEverythingElse(bool isKeyword = false);
 
 private:
     size_t m_currentIndex { 0 };
