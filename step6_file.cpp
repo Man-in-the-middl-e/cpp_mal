@@ -39,7 +39,9 @@ int main()
 
     std::cout << "user> ";
     for (std::string currentLine; std::getline(std::cin, currentLine);) {
-        std::cout << rep(currentLine, env) << "\n";
+        if (!currentLine.empty()) {
+            std::cout << rep(currentLine, env) << "\n";
+        }
         std::cout << "user> ";
     }
 }
