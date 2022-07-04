@@ -52,8 +52,6 @@ std::shared_ptr<MalType> readAtom(const Reader& reader)
         return std::make_shared<MalNumber>(currentToken.token);
     case TokenType::STRING:
         return std::make_shared<MalString>(currentToken.token);
-    case TokenType::ERROR_UNTERMINATED_STRING:
-        return std::make_shared<MalString>();
     case TokenType::BOOLEAN:
         return std::make_shared<MalBoolean>(currentToken.token);
     case TokenType::NIL:
@@ -61,6 +59,8 @@ std::shared_ptr<MalType> readAtom(const Reader& reader)
     case TokenType::KEYWORD:
         // TODO: create separate type
         return std::make_shared<MalString>(currentToken.token);
+    case TokenType::ERROR_UNTERMINATED_STRING:
+        return std::make_shared<MalError>("Unterminated String");
     default:
         return std::make_shared<MalSymbol>(currentToken.token);
     }

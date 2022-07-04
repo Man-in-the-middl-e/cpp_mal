@@ -7,49 +7,6 @@
 #include <iostream>
 #include <sstream>
 
-namespace {
-std::string unescapeString(std::string_view str)
-{
-    std::stringstream ss;
-    // translate:
-    //      '\n' -> newline
-    //      '\"' -> '"\'
-    //      '\\' -> '\'
-    for (size_t i = 0; i < str.size();) {
-        if (i + 1 >= str.size()) {
-            ss << str.back();
-            break;
-        }
-        const char currentChar = str[i];
-        const char nextChar = str[i + 1];
-        if (currentChar == '\\') {
-            bool escaped = true;
-            switch (nextChar) {
-            case 'n':
-                ss << "\n";
-                break;
-            case '\\':
-                ss << "\\";
-                break;
-            case '"':
-                ss << "\"";
-                break;
-            default:
-                escaped = false;
-                break;
-            }
-            if (escaped) {
-                i += 2;
-                continue;
-            }
-        }
-        ss << currentChar;
-        ++i;
-    }
-    return ss.str();
-}
-}
-
 namespace mal {
 
 MalNumber::MalNumber(std::string_view number)
@@ -190,20 +147,77 @@ MalSymbol* MalSymbol::asMalSymbol()
 }
 
 MalString::MalString(std::string_view str)
-    : m_malString(unescapeString(str))
+    : m_malString(str)
 {
 }
 
 std::string MalString::asString() const
 {
-    if (m_malString.size() == 0)
-        return "unbalanced";
     return m_malString;
 }
 
 MalString* MalString::asMalString()
 {
     return this;
+}
+
+std::string MalString::escapeString(const std::string& str)
+{
+    std::stringstream ss;
+    for (size_t i = 0; i < str.size(); ++i) {
+        const char currentChar = str[i];
+        if (currentChar == '\\') {
+            ss << "\\";
+        } else if (currentChar == '"') {
+            ss << "\\";
+        } else if (currentChar == '\n') {
+            ss << '\\' << 'n';
+            continue;
+        }
+        ss << currentChar;
+    }
+    return ss.str();
+}
+
+std::string MalString::unEscapeString(const std::string& str)
+{
+    std::stringstream ss;
+    // translate:
+    //      '\n' -> newline
+    //      '\"' -> '"\'
+    //      '\\' -> '\'
+    for (size_t i = 0; i < str.size();) {
+        if (i + 1 >= str.size()) {
+            ss << str.back();
+            break;
+        }
+        const char currentChar = str[i];
+        const char nextChar = str[i + 1];
+        if (currentChar == '\\') {
+            bool escaped = true;
+            switch (nextChar) {
+            case 'n':
+                ss << "\n";
+                break;
+            case '\\':
+                ss << "\\";
+                break;
+            case '"':
+                ss << "\"";
+                break;
+            default:
+                escaped = false;
+                break;
+            }
+            if (escaped) {
+                i += 2;
+                continue;
+            }
+        }
+        ss << currentChar;
+        ++i;
+    }
+    return ss.str();
 }
 
 bool MalString::isEmpty() const

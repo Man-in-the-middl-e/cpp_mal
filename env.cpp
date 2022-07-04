@@ -10,6 +10,9 @@ GlobalEnv::GlobalEnv()
 {
     m_buildins = {
         { "prn", std::make_shared<MalCallable>(prn) },
+        { "pr-str", std::make_shared<MalCallable>(printString) },
+        { "str", std::make_shared<MalCallable>(str) },
+        { "println", std::make_shared<MalCallable>(println) },
         { "list", std::make_shared<MalCallable>(list) },
         { "list?", std::make_shared<MalCallable>(isList) },
         { "empty?", std::make_shared<MalCallable>(isEmpty) },

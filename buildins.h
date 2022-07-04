@@ -7,6 +7,9 @@ class MalContainer;
 class Env;
 
 std::shared_ptr<MalType> prn(MalContainer* args);
+std::shared_ptr<MalType> printString(MalContainer* args);
+std::shared_ptr<MalType> str(MalContainer* args);
+std::shared_ptr<MalType> println(MalContainer* args);
 std::shared_ptr<MalType> list(MalContainer* args);
 std::shared_ptr<MalType> isList(MalContainer* args);
 std::shared_ptr<MalType> isEmpty(MalContainer* args);

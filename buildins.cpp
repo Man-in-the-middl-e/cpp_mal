@@ -2,12 +2,12 @@
 
 #include "eval_ast.h"
 #include "maltypes.h"
-#include "printer.h"
 #include "reader.h"
 
 #include <fstream>
 #include <functional>
 #include <iostream>
+#include <sstream>
 
 namespace mal {
 
@@ -49,9 +49,62 @@ std::shared_ptr<MalType> applyArithmeticOperations(MalContainer* arguments, std:
     }
 }
 
+std::string joinTypeStrings(MalContainer* args, bool withSpace = true)
+{
+    std::string outStr;
+    if (!args->isEmpty()) {
+        for (const auto& element : *args) {
+            outStr += element->asString() + (args->back() != element  && withSpace ? " " : "");
+        }
+    }
+    return outStr;
+}
+
 std::shared_ptr<MalType> prn(MalContainer* args)
 {
-    std::cout << print_st(args->head().get()) << std::endl;
+    std::cout << joinTypeStrings(args) <<  std::endl;
+    return std::make_shared<MalNil>();
+}
+
+std::shared_ptr<MalType> printString(MalContainer* args)
+{
+    return std::make_shared<MalString>('"' + MalString::escapeString(joinTypeStrings(args)) + '"');
+}
+
+std::shared_ptr<MalType> str(MalContainer* args)
+{
+    std::string outStr = joinTypeStrings(args, false);
+
+    // remove quotes
+    std::string withoutQuotes;
+    if (!outStr.empty() && outStr[0] != '"') {
+        withoutQuotes += outStr[0];
+    }
+
+    for (size_t i = 1; i < outStr.size(); ++i) {
+        if (outStr[i - 1] != '\\' && outStr[i] == '"') {
+            continue;
+        }
+        withoutQuotes += outStr[i];
+    }
+    return std::make_shared<MalString>('"' + withoutQuotes + '"');
+}
+
+std::shared_ptr<MalType> println(MalContainer* args)
+{
+    std::string outStr = joinTypeStrings(args);
+    std::string withoutQuotes;
+    for (size_t i = 0; i + 1 < outStr.size(); ++i) {
+        if (outStr[i] == '"') {
+            continue;
+        }
+        if (outStr[i] == '\\' && outStr[i + 1] == '"') {
+            withoutQuotes += '"';
+            continue;
+        }
+        withoutQuotes += outStr[i];
+    }
+    std::cout << MalString::unEscapeString(withoutQuotes) << std::endl;
     return std::make_shared<MalNil>();
 }
 

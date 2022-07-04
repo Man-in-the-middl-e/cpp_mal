@@ -157,7 +157,6 @@ private:
 
 class MalString final : public MalType {
 public:
-    MalString() = default; // for invalid strings
     MalString(std::string_view str);
 
     std::string asString() const override;
@@ -169,6 +168,10 @@ public:
     }
 
     bool isEmpty() const;
+
+public:
+    static std::string escapeString(const std::string& str);
+    static std::string unEscapeString(const std::string& str);
 
 private:
     std::string m_malString;

@@ -4,7 +4,6 @@
 
 #include "eval_ast.h"
 #include "maltypes.h"
-#include "printer.h"
 #include "reader.h"
 
 using MalType = mal::MalType;
@@ -24,7 +23,7 @@ eval(std::shared_ptr<MalType> ast, mal::Env& env)
 std::string
 print(std::shared_ptr<MalType> program)
 {
-    return print_st(program.get());
+    return program->asString();
 }
 
 std::string
