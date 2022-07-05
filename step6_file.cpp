@@ -32,14 +32,24 @@ rep(std::string_view program, mal::Env& env)
     return print(eval(read(program), env));
 }
 
+bool statWithComment(const std::string& line)
+{
+    for (auto ch : line) {
+        if (ch != ' ') {
+            return ch == ';';
+        }
+    }
+    return false;
+}
+
 int main()
 {
     static mal::Env env;
 
     std::cout << "user> ";
     for (std::string currentLine; std::getline(std::cin, currentLine);) {
-        if (!currentLine.empty()) {
-            std::cout << rep(currentLine, env) << "\n";
+        if (!currentLine.empty() && !statWithComment(currentLine)) {
+            std::cout << rep(currentLine, env) << '\n';
         }
         std::cout << "user> ";
     }

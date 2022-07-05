@@ -143,7 +143,7 @@ std::vector<Token> Lexer::tokenize()
             break;
         }
         case ';': {
-            tokens.push_back(matchSemicolon());
+            skipComment();
             break;
         }
         default: {
@@ -206,13 +206,11 @@ Token Lexer::matchString()
     return makeToken(tokenType, startPos, m_currentIndex - startPos);
 }
 
-Token Lexer::matchSemicolon()
+void Lexer::skipComment()
 {
-    const auto startPos = m_currentIndex - 1;
-    while (!isEnd()) {
+    while (!isEnd() && peek() != '\n') {
         advance();
     }
-    return makeToken(TokenType::SEMICOLON, startPos, m_currentIndex - startPos);
 }
 
 Token Lexer::matchNumber()
@@ -229,7 +227,7 @@ Token Lexer::matchEverythingElse(bool isKeyword)
 {
     using namespace std::literals;
     const auto startPos = m_currentIndex - 1;
-    auto isSeparator = [](char c) { return " )],"sv.find(c) != std::string_view::npos; };
+    auto isSeparator = [](char c) { return " )],\n"sv.find(c) != std::string_view::npos; };
     auto is = [this, startPos](std::string_view wordToMatch) {
         return wordToMatch == m_program.substr(startPos, wordToMatch.size());
     };

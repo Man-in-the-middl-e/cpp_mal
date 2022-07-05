@@ -16,7 +16,6 @@ namespace mal {
     VARIANT(RIGHT_PAREN) \
     VARIANT(APOSTROPHE) \
     VARIANT(SINGLE_QUOTE) \
-    VARIANT(SEMICOLON) \
     VARIANT(TILDE) \
     VARIANT(CARET) \
     VARIANT(AT) \
@@ -58,9 +57,9 @@ private:
 
     Token makeToken(TokenType type, size_t startPos, size_t tokenLen) const;
     Token matchString();
-    Token matchSemicolon();
     Token matchNumber();
     Token matchEverythingElse(bool isKeyword = false);
+    void skipComment();
 
 private:
     size_t m_currentIndex { 0 };
