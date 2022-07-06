@@ -20,6 +20,7 @@ GlobalEnv::GlobalEnv()
         { "eval", std::make_shared<MalCallable>(eval) },
         { "read-string", std::make_shared<MalCallable>(readString) },
         { "slurp", std::make_shared<MalCallable>(slurp) },
+        { "load-file", std::make_shared<MalCallable>(loadFile) },
         { "not", std::make_shared<MalCallable>(malNot) },
 
         { "=", std::make_shared<MalCallable>(equal) },

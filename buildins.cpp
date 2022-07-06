@@ -198,15 +198,28 @@ std::shared_ptr<MalType> multiplies(MalContainer* args)
     return applyArithmeticOperations(args, std::multiplies<int>());
 }
 
-std::shared_ptr<MalType> readString(MalContainer* args, Env&)
+std::shared_ptr<MalType> readString(MalType* args, Env&)
 {
-    if (args->isEmpty()) {
-        return std::make_unique<MalError>("read-string <string>");
-    }
-    const auto progWithQuotes = args->at(0)->asString();
-
+    const auto progWithQuotes = args->asMalContainer() ? args->asMalContainer()->at(0)->asString() : args->asString();
     const auto prog = progWithQuotes.substr(1, progWithQuotes.size() - 2);
     return mal::readStr(prog);
+}
+
+std::optional<std::string> readFile(const std::string& filePath)
+{
+    if (filePath.empty()) {
+        return std::nullopt;
+    }
+
+    const auto fileName = filePath.front() == '"' ? filePath.substr(1, filePath.size() - 2) : filePath;
+    std::ifstream is(fileName, std::ios::in);
+    if (is.is_open()) {
+        std::stringstream buffer;
+        buffer << is.rdbuf();
+        return buffer.str();
+    }
+
+    return std::nullopt;
 }
 
 std::shared_ptr<MalType> slurp(MalContainer* args, Env&)
@@ -215,15 +228,9 @@ std::shared_ptr<MalType> slurp(MalContainer* args, Env&)
         return std::make_unique<MalError>("slurp expect file name");
     }
 
-    const auto fileNameWitQuotes = args->at(0)->asString();
-    // remove quotes
-    const auto fileName = fileNameWitQuotes.substr(1, fileNameWitQuotes.size() - 2);
-    std::ifstream is(fileName, std::ios::in);
-    if (is.is_open()) {
-        std::stringstream buffer;
-        buffer << is.rdbuf();
-        // TODO: create separate type?
-        return std::make_shared<MalSymbol>(buffer.str());
+    auto fileContent = readFile(args->at(0)->asString());
+    if (fileContent.has_value()){
+        return std::make_shared<MalSymbol>('"' + MalString::escapeString(fileContent.value()) + '"');
     }
 
     return std::make_unique<MalError>("Couldn't open the file");
@@ -238,9 +245,25 @@ std::shared_ptr<MalType> eval(MalContainer* args, Env& env)
     // TODO: don't create new container
     auto newContaienr = std::make_shared<MalContainer>(args->type());
     for (const auto& elem : *args) {
+        // TODO: how to construct shared_ptr<MalType> from first elem of the list????
+        if (args->size() == 1) {
+            return EVAL(elem, env);
+        }
         newContaienr->append(elem);
     }
     return EVAL(newContaienr, env);
+}
+
+std::shared_ptr<MalType> loadFile(MalContainer* args, Env& env)
+{
+    auto fileContent = readFile(args->at(0)->asString());
+    if (fileContent.has_value()) {
+        auto program = std::make_shared<MalSymbol>("\"(do " + fileContent.value() + "\n)\"");
+        auto ast = readString(program.get(), env);
+        std::cout << eval(ast->asMalContainer(), env)->asString() << std::endl;
+        return std::make_shared<MalNil>();
+    }
+    return std::make_shared<MalError>("Failed to load file");
 }
 
 } // mal

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <string_view>
+#include <sstream>
 
 #include "eval_ast.h"
 #include "maltypes.h"
@@ -32,7 +33,7 @@ rep(std::string_view program, mal::Env& env)
     return print(eval(read(program), env));
 }
 
-bool statWithComment(const std::string& line)
+bool startWithComment(const std::string& line)
 {
     for (auto ch : line) {
         if (ch != ' ') {
@@ -42,15 +43,21 @@ bool statWithComment(const std::string& line)
     return false;
 }
 
-int main()
+int main(int argc, char* argv[])
 {
     static mal::Env env;
 
-    std::cout << "user> ";
-    for (std::string currentLine; std::getline(std::cin, currentLine);) {
-        if (!currentLine.empty() && !statWithComment(currentLine)) {
-            std::cout << rep(currentLine, env) << '\n';
-        }
+    if (argc > 1) {
+        std::ostringstream malProgramToLoadFile;
+        malProgramToLoadFile << "(load-file " << '"' << argv[1] << "\")";
+        std::cout << rep(malProgramToLoadFile.str(), env) << '\n';
+    } else {
         std::cout << "user> ";
+        for (std::string currentLine; std::getline(std::cin, currentLine);) {
+            if (!currentLine.empty() && !startWithComment(currentLine)) {
+                std::cout << rep(currentLine, env) << '\n';
+            }
+            std::cout << "user> ";
+        }
     }
 }

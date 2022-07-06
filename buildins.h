@@ -24,7 +24,8 @@ std::shared_ptr<MalType> plus(MalContainer* args);
 std::shared_ptr<MalType> minus(MalContainer* args);
 std::shared_ptr<MalType> divides(MalContainer* args);
 std::shared_ptr<MalType> multiplies(MalContainer* args);
-std::shared_ptr<MalType> readString(MalContainer* args, Env&);
+std::shared_ptr<MalType> readString(MalType* args, Env&);
 std::shared_ptr<MalType> slurp(MalContainer* args, Env&);
 std::shared_ptr<MalType> eval(MalContainer* args, Env& env);
+std::shared_ptr<MalType> loadFile(MalContainer* args, Env& env);
 } // mal
