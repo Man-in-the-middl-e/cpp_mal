@@ -73,6 +73,12 @@ Env::Env(Env* parentEvn)
     parentEnv = parentEvn;
 }
 
+Env::Env(const Env& oldEnv)
+{
+    m_data = oldEnv.m_data;
+    parentEnv = nullptr;
+}
+
 void Env::set(const std::string& key, std::shared_ptr<MalType> value)
 {
     // TODO: check if key is already in  GlobalEnv

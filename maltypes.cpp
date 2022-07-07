@@ -344,9 +344,10 @@ MalError* MalError::asMalError()
     return this;
 }
 
-MalClosure::MalClosure(const std::shared_ptr<MalType> parameters, const std::shared_ptr<MalType> body)
+MalClosure::MalClosure(const std::shared_ptr<MalType> parameters, const std::shared_ptr<MalType> body, const Env& env)
     : m_functionParameters(parameters)
     , m_functionBody(body)
+    , m_relatedEnv(env)
 {
 }
 
@@ -362,13 +363,13 @@ MalClosure* MalClosure::asMalClosure()
 
 std::shared_ptr<MalType> MalClosure::apply(const MalContainer* arguments, Env& env)
 {
-    Env newEnv(m_relatedEnv.isEmpty() ? env : m_relatedEnv);
+    // NOTE: we can't just make env parent of m_relatedEnv, 
+    // because at some point env could become referene to deallocated memory,
+    // so we copy it, probably there is a better way to do this
+    m_relatedEnv.addToEnv(env);
+    Env newEnv(&m_relatedEnv);
     newEnv.setBindings(m_functionParameters->asMalContainer(), arguments);
     auto res = EVAL(m_functionBody, newEnv);
-
-    if (auto closure = res->asMalClosure(); closure) {
-        closure->m_relatedEnv.addToEnv(newEnv);
-    }
     return res;
 }
 

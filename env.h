@@ -28,6 +28,7 @@ class Env {
 public:
     Env() = default;
     Env(Env* parentEnv);
+    Env(const Env& newEnv);
 
     void set(const std::string& key, std::shared_ptr<MalType> value);
     std::shared_ptr<MalType> find(const std::string& key) const;

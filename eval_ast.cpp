@@ -4,11 +4,11 @@
 
 namespace mal {
 
-std::shared_ptr<MalType> applyFunc(const MalContainer* ls)
+std::shared_ptr<MalType> applyFunc(const MalContainer* ls, Env& env)
 {
     const auto functionParameters = ls->at(1);
     const auto functionBody = ls->at(2);
-    return std::make_shared<MalClosure>(functionParameters, functionBody);
+    return std::make_shared<MalClosure>(functionParameters, functionBody, env);
 }
 
 std::shared_ptr<MalType> applyDo(MalContainer* ls, Env& env)
@@ -45,7 +45,7 @@ std::shared_ptr<MalType> applyIf(const MalContainer* ls, Env& env)
 
 std::shared_ptr<MalType> applyLet(const MalContainer* ls, Env& env)
 {
-    Env letEnv(env);
+    Env letEnv(&env);
     auto letArguments = ls->at(1)->asMalContainer();
 
     // EXAMPLE: (let* (p (+ 2 3) q (+ 2 p)) (+ p q))
@@ -141,7 +141,7 @@ std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env)
         } else if (symbolStr == "do") {
             return applyDo(container, env);
         } else if (symbolStr == "fn*") {
-            return applyFunc(container);
+            return applyFunc(container, env);
         } else if (symbolStr == "atom") {
             return applyAtom(container, env);
         } else if (symbolStr == "reset!") {

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16.3)
 
 project(MAL)
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_GLIBCXX_DEBUG")
-add_compile_options(-Wall -Wextra -Wshadow -Wnon-virtual-dtor -Wunused -pedantic -std=c++17 -ggdb3)
+add_compile_options(-Wall -Wextra -Wshadow -Wnon-virtual-dtor -Wunused -pedantic -std=c++2a -ggdb3)
 
 if (${STEP} STREQUAL "step0")
     add_executable(step0_repl step0_repl.cpp)
