@@ -71,6 +71,60 @@ std::shared_ptr<MalType> applyDef(const MalContainer* ls, Env& env)
     return envArguments;
 }
 
+std::shared_ptr<MalType> applyAtom(const MalContainer* ls, Env& env)
+{
+    if (ls->size() < 2) {
+        return std::make_unique<MalError>("Not enough arguments");
+    }
+
+    const auto atomValue = EVAL(ls->at(1), env);
+    return std::make_shared<MalAtom>(atomValue, ls->asString());
+}
+
+std::shared_ptr<MalType> applyReset(const MalContainer* ls, Env& env)
+{
+    if (ls->size() <= 2) {
+        return std::make_unique<MalError>("Not enough arguments");
+    }
+
+    const auto atomName = ls->at(1)->asString();
+    if (const auto maybeAtom = env.find(atomName); !maybeAtom) {
+        return std::make_unique<MalError>(atomName + " is not defined");
+    } else if (!maybeAtom->asMalAtom()) {
+        return std::make_unique<MalError>("This operation could only be applied to atoms");
+    } else {
+        // NOTE: can you reset new atom with new atom?
+        const auto newValue = EVAL(ls->at(2), env);
+        maybeAtom->asMalAtom()->reset(newValue);
+        return newValue;
+    }
+}
+
+std::shared_ptr<MalType> applySwap(const MalContainer* ls, Env& env)
+{
+    if (ls->size() <= 2) {
+        return std::make_unique<MalError>("Not enough arguments");
+    }
+
+    const auto atomName = ls->at(1)->asString();
+    if (const auto maybeAtom = env.find(atomName); !maybeAtom) {
+        return std::make_unique<MalError>(atomName + " is not defined");
+    } else if (!maybeAtom->asMalAtom()) {
+        return std::make_unique<MalError>("This operation could only be applied to atoms");
+    } else {
+        const auto function = EVAL(ls->at(2), env);
+        const auto functionAst = std::make_shared<MalContainer>(ls->type());
+        functionAst->append(function);
+        functionAst->append(maybeAtom->asMalAtom()->deref());
+        for (size_t argIndex = 3; argIndex < ls->size(); ++argIndex) {
+            functionAst->append(ls->at(argIndex));
+        }
+        const auto res = EVAL(functionAst, env);
+        maybeAtom->asMalAtom()->reset(res);
+        return res;
+    }
+}
+
 std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env)
 {
     if (const auto container = ast->asMalContainer(); container) {
@@ -88,6 +142,12 @@ std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env)
             return applyDo(container, env);
         } else if (symbolStr == "fn*") {
             return applyFunc(container);
+        } else if (symbolStr == "atom") {
+            return applyAtom(container, env);
+        } else if (symbolStr == "reset!") {
+            return applyReset(container, env);
+        } else if (symbolStr == "swap!") {
+            return applySwap(container, env);
         }
 
         const auto evaluatedList = eval_ast(ast, env);
@@ -97,7 +157,7 @@ std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env)
                 return closure->apply(ls->tail().get(), env);
             }
             else if (const auto func = head->asMalCallable(); func) {
-                const auto parameters = evaluatedList->asMalContainer()->tail();
+                const auto parameters = ls->tail();
                 return func->apply(parameters.get(), env);
             }
         }
@@ -126,6 +186,9 @@ std::shared_ptr<MalType> eval_ast(std::shared_ptr<MalType> ast, Env& env)
         if (!relatedEnv) {
             std::string error = symbol->asString() + " is not defined";
             return std::make_unique<MalError>(error);
+        } else if(symbol->asString() == "*ARGV*") {
+            // *ARGV* is the only one callable that doesn't require any arguments
+            return relatedEnv->asMalCallable()->apply(nullptr);
         }
         return relatedEnv;
     } else if (const auto hashMap = ast->asMalHashMap(); hashMap) {

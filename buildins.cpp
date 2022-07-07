@@ -129,6 +129,11 @@ std::shared_ptr<MalType> isEmpty(MalContainer* args)
     return std::make_shared<MalBoolean>(ls && ls->size() == 0);
 }
 
+std::shared_ptr<MalType> isAtom(MalContainer *args)
+{
+    return std::make_shared<MalBoolean>(args->head()->asMalAtom() != nullptr);
+}
+
 std::shared_ptr<MalType> count(MalContainer* args)
 {
     if (auto first = args->head(); first->asMalContainer()) {
@@ -264,6 +269,23 @@ std::shared_ptr<MalType> loadFile(MalContainer* args, Env& env)
         return std::make_shared<MalNil>();
     }
     return std::make_shared<MalError>("Failed to load file");
+}
+
+std::shared_ptr<MalType> deref(MalContainer* args)
+{
+    if (args->size() < 1) {
+        return std::make_unique<MalError>("Not enough arguments");
+    }
+
+    if (const auto malAtom = args->at(0); malAtom->asMalAtom()) {
+        return malAtom->asMalAtom()->deref();
+    }
+    return std::make_unique<MalError>("Value is not an atom");;
+}
+
+std::shared_ptr<MalType> argv(MalContainer*)
+{
+    return GlobalEnv::the().getArgvs();
 }
 
 } // mal

@@ -7,17 +7,21 @@ namespace mal {
 class MalCallable;
 class MalType;
 class MalContainer;
+class MalList;
 
 class GlobalEnv {
 public:
     static GlobalEnv& the();
     std::shared_ptr<MalType> find(const std::string& key) const;
+    std::shared_ptr<MalList> getArgvs() const;
+    void setUpArgv(int argc, char* argv[]);
 
 private:
     GlobalEnv();
 
 private:
     std::unordered_map<std::string, std::shared_ptr<MalCallable>> m_buildins;
+    std::shared_ptr<MalList> m_argvs;
 };
 
 class Env {

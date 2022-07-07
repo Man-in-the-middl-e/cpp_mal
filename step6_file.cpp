@@ -45,6 +45,7 @@ bool startWithComment(const std::string& line)
 
 int main(int argc, char* argv[])
 {
+    mal::GlobalEnv::the().setUpArgv(argc, argv);
     static mal::Env env;
 
     if (argc > 1) {

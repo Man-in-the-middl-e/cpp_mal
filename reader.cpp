@@ -38,6 +38,8 @@ std::shared_ptr<MalType> readFrom(const Reader& reader)
         return readVector(reader);
     case TokenType::LEFT_CURLY_BRACE:
         return readHashMap(reader);
+    case TokenType::AT:
+        return readMacro(reader);
     default:
         return readAtom(reader);
     }
@@ -122,6 +124,19 @@ std::shared_ptr<MalHashMap> readHashMap(const Reader& reader)
         return std::make_shared<MalHashMap>();
     }
     return malHashMap;
+}
+
+// @atomName -> (deref atomName)
+std::shared_ptr<MalType> readMacro(const Reader& reader)
+{
+    if (const auto currentToken = reader.next(); currentToken.type == TokenType::LAST_TOKEN)
+    {
+        return std::make_unique<MalError>("Atom name is expected");
+    }
+    auto list = std::make_shared<MalList>();
+    list->append(std::make_shared<MalSymbol>("deref"));
+    list->append(readFrom(reader));
+    return list;
 }
 
 } // mal

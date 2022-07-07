@@ -9,6 +9,33 @@
 
 namespace mal {
 
+MalAtom::MalAtom(std::shared_ptr<MalType> malType, const std::string& atomDesripton)
+    : m_underlyingType(malType)
+    , m_atomDescripton(atomDesripton)
+{
+}
+
+std::string MalAtom::asString() const
+{
+    return m_atomDescripton;
+}
+
+MalAtom* MalAtom::asMalAtom()
+{
+    return this;
+}
+
+std::shared_ptr<MalType> MalAtom::reset(std::shared_ptr<MalType> newType)
+{
+    m_underlyingType = newType;
+    return m_underlyingType;
+}
+
+std::shared_ptr<MalType> MalAtom::deref() const
+{
+    return m_underlyingType;
+}
+
 MalNumber::MalNumber(std::string_view number)
     : m_number(std::atoi(number.data()))
 {
@@ -338,7 +365,7 @@ std::shared_ptr<MalType> MalClosure::apply(const MalContainer* arguments, Env& e
     Env newEnv(m_relatedEnv.isEmpty() ? env : m_relatedEnv);
     newEnv.setBindings(m_functionParameters->asMalContainer(), arguments);
     auto res = EVAL(m_functionBody, newEnv);
-    
+
     if (auto closure = res->asMalClosure(); closure) {
         closure->m_relatedEnv.addToEnv(newEnv);
     }
@@ -357,7 +384,7 @@ MalCallable::MalCallable(CallableWithEnv callableWithEnv)
 
 std::string MalCallable::asString() const
 {
-    return "";
+    return "callable";
 }
 
 MalCallable* MalCallable::asMalCallable()
@@ -367,11 +394,18 @@ MalCallable* MalCallable::asMalCallable()
 
 std::shared_ptr<MalType> MalCallable::apply(MalContainer* args, Env& env) const
 {
-    if (m_callable)
-    {
+    if (m_callable) {
         return m_callable(args);
     }
     return m_callableWithEnv(args, env);
+}
+
+std::shared_ptr<MalType> MalCallable::apply(MalContainer* args) const
+{
+    if (m_callable) {
+        return m_callable(args);
+    }
+    return std::make_unique<MalError>("Callable function is not defined");
 }
 
 } // namespace mal

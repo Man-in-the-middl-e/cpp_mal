@@ -95,6 +95,9 @@ std::vector<Token> Lexer::tokenize()
             if (match('*')) {
                 advance();
                 tokens.push_back(makeToken(TokenType::DOUBLE_STAR, m_currentIndex - 2, 2));
+                // try to match *ARGV*
+            } else if (match('A')) {
+                tokens.push_back(matchEverythingElse());
             } else {
                 tokens.push_back(makeOneCharToken(TokenType::SYMBOL));
             }

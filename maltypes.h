@@ -12,6 +12,7 @@
 namespace mal {
 enum class TokenType : char;
 
+class MalAtom;
 class MalNumber;
 class MalContainer;
 class MalSymbol;
@@ -37,12 +38,28 @@ public:
     virtual MalNil* asMalNil() { return nullptr; }
     virtual MalClosure* asMalClosure() { return nullptr; }
     virtual MalCallable* asMalCallable() { return nullptr; }
+    virtual MalAtom* asMalAtom() { return nullptr; }
 
     virtual bool operator==(MalType*) const { return false; }
 
     virtual ~MalType()
     {
     }
+};
+
+class MalAtom : public MalType {
+public:
+    MalAtom(std::shared_ptr<MalType> malType, const std::string& atomDesripton);
+
+    std::string asString() const override;
+    MalAtom* asMalAtom() override;
+
+    std::shared_ptr<MalType> reset(std::shared_ptr<MalType> newType);
+    std::shared_ptr<MalType> deref() const;
+
+private:
+    std::shared_ptr<MalType> m_underlyingType;
+    std::string m_atomDescripton;
 };
 
 class MalNumber final : public MalType {
@@ -281,6 +298,7 @@ public:
     MalCallable* asMalCallable() override;
 
     std::shared_ptr<MalType> apply(MalContainer* args, Env& env) const;
+    std::shared_ptr<MalType> apply(MalContainer* args) const;
 
 private:
     Callable m_callable;

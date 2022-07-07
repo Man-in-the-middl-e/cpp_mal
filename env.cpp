@@ -16,12 +16,15 @@ GlobalEnv::GlobalEnv()
         { "list", std::make_shared<MalCallable>(list) },
         { "list?", std::make_shared<MalCallable>(isList) },
         { "empty?", std::make_shared<MalCallable>(isEmpty) },
+        { "atom?", std::make_shared<MalCallable>(isAtom) },
         { "count", std::make_shared<MalCallable>(count) },
         { "eval", std::make_shared<MalCallable>(eval) },
         { "read-string", std::make_shared<MalCallable>(readString) },
         { "slurp", std::make_shared<MalCallable>(slurp) },
         { "load-file", std::make_shared<MalCallable>(loadFile) },
         { "not", std::make_shared<MalCallable>(malNot) },
+        { "deref", std::make_shared<MalCallable>(deref) },
+        { "*ARGV*", std::make_shared<MalCallable>(argv) },
 
         { "=", std::make_shared<MalCallable>(equal) },
         { "<", std::make_shared<MalCallable>(less) },
@@ -31,7 +34,7 @@ GlobalEnv::GlobalEnv()
         { "+", std::make_shared<MalCallable>(plus) },
         { "-", std::make_shared<MalCallable>(minus) },
         { "/", std::make_shared<MalCallable>(divides) },
-        { "*", std::make_shared<MalCallable>(multiplies) }
+        { "*", std::make_shared<MalCallable>(multiplies) },
     };
 }
 
@@ -50,6 +53,21 @@ std::shared_ptr<MalType> GlobalEnv::find(const std::string& key) const
     return nullptr;
 }
 
+std::shared_ptr<MalList> GlobalEnv::getArgvs() const
+{
+    return m_argvs;
+}
+
+void GlobalEnv::setUpArgv(int argc, char* argv[])
+{
+    if (!m_argvs) {
+        m_argvs = std::make_shared<MalList>();
+        for (int argIndex = 1; argIndex < argc; ++argIndex) {
+            m_argvs->append(std::make_shared<MalSymbol>(argv[argIndex]));
+        }
+    }
+}
+
 Env::Env(Env* parentEvn)
 {
     parentEnv = parentEvn;
@@ -57,6 +75,7 @@ Env::Env(Env* parentEvn)
 
 void Env::set(const std::string& key, std::shared_ptr<MalType> value)
 {
+    // TODO: check if key is already in  GlobalEnv
     m_data[key] = value;
 }
 

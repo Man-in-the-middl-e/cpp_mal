@@ -29,6 +29,7 @@ std::shared_ptr<MalType> readStr(std::string_view program);
 std::shared_ptr<MalType> readFrom(const Reader& reader);
 std::shared_ptr<MalType> readAtom(const Reader& reader);
 std::shared_ptr<MalList> readSymobl(const Reader& reader);
+std::shared_ptr<MalType> readMacro(const Reader& reader);
 
 // TODO: make one function for that
 std::shared_ptr<MalList> readList(const Reader& reader);
