@@ -31,4 +31,7 @@ std::shared_ptr<MalType> eval(MalContainer* args, Env& env);
 std::shared_ptr<MalType> loadFile(MalContainer* args, Env& env);
 std::shared_ptr<MalType> deref(MalContainer* args);
 std::shared_ptr<MalType> argv(MalContainer *args);
+std::shared_ptr<MalType> cons(MalContainer *args);
+std::shared_ptr<MalType> concat(MalContainer *args);
+std::shared_ptr<MalType> vec(MalContainer* args);
 } // mal

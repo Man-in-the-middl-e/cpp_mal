@@ -117,6 +117,20 @@ std::shared_ptr<MalType> list(MalContainer* args)
     return newList;
 }
 
+std::shared_ptr<MalType> vec(MalContainer* args)
+{
+    auto vector = std::make_shared<MalVector>();
+    if (args->size() >= 1) {
+        if (!args->at(0)->asMalContainer()) {
+            return std::make_unique<MalError>("Could only be applied to list or vectors");
+        }
+        for (const auto& obj : *args->at(0)->asMalContainer()) {
+            vector->append(obj);
+        }
+    }
+    return vector;
+}
+
 std::shared_ptr<MalType> isList(MalContainer* args)
 {
     const auto list = args->head()->asMalContainer();
@@ -286,6 +300,42 @@ std::shared_ptr<MalType> deref(MalContainer* args)
 std::shared_ptr<MalType> argv(MalContainer*)
 {
     return GlobalEnv::the().getArgvs();
+}
+
+std::shared_ptr<MalType> cons(MalContainer *args)
+{
+    if (args->size() < 2) {
+        return std::make_unique<MalError>("Not enough arguments");
+    }
+    if (auto originalContainer = args->at(1)->asMalContainer(); originalContainer) {
+        auto list = std::make_shared<MalList>();
+        list->append(args->at(0));
+        for (const auto& elem : *originalContainer) {
+            list->append(elem);
+        }
+        return list;
+    }
+    return std::make_unique<MalError>("Can append only to vectors and list");
+}
+
+std::shared_ptr<MalType> concat(MalContainer* args)
+{
+    auto list = std::make_shared<MalList>();
+    if (args->isEmpty()) {
+        return list;
+    }
+
+    //([1 2] (list 3 4) [5 6])
+    for (size_t elementIndex = 0; elementIndex < args->size(); ++elementIndex) {
+        if (const auto maybeContainer = args->at(elementIndex)->asMalContainer(); maybeContainer) {
+            for (const auto& elem : *maybeContainer) {
+                list->append(elem);
+            }
+        } else {
+            list->append(args->at(elementIndex));
+        }
+    }
+    return list;
 }
 
 } // mal

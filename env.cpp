@@ -14,6 +14,7 @@ GlobalEnv::GlobalEnv()
         { "str", std::make_shared<MalCallable>(str) },
         { "println", std::make_shared<MalCallable>(println) },
         { "list", std::make_shared<MalCallable>(list) },
+        { "vec", std::make_shared<MalCallable>(vec) },
         { "list?", std::make_shared<MalCallable>(isList) },
         { "empty?", std::make_shared<MalCallable>(isEmpty) },
         { "atom?", std::make_shared<MalCallable>(isAtom) },
@@ -25,6 +26,8 @@ GlobalEnv::GlobalEnv()
         { "not", std::make_shared<MalCallable>(malNot) },
         { "deref", std::make_shared<MalCallable>(deref) },
         { "*ARGV*", std::make_shared<MalCallable>(argv) },
+        { "cons", std::make_shared<MalCallable>(cons) },
+        { "concat", std::make_shared<MalCallable>(concat) },
 
         { "=", std::make_shared<MalCallable>(equal) },
         { "<", std::make_shared<MalCallable>(less) },
