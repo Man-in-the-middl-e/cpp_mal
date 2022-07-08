@@ -361,7 +361,7 @@ MalClosure* MalClosure::asMalClosure()
     return this;
 }
 
-std::shared_ptr<MalType> MalClosure::apply(const MalContainer* arguments, Env& env)
+std::shared_ptr<MalType> MalClosure::evaluate(const MalContainer* arguments, Env& env)
 {
     // NOTE: we can't just make env parent of m_relatedEnv, 
     // because at some point env could become referene to deallocated memory,
@@ -393,7 +393,7 @@ MalCallable* MalCallable::asMalCallable()
     return this;
 }
 
-std::shared_ptr<MalType> MalCallable::apply(MalContainer* args, Env& env) const
+std::shared_ptr<MalType> MalCallable::evaluate(MalContainer* args, Env& env) const
 {
     if (m_callable) {
         return m_callable(args);
@@ -401,7 +401,7 @@ std::shared_ptr<MalType> MalCallable::apply(MalContainer* args, Env& env) const
     return m_callableWithEnv(args, env);
 }
 
-std::shared_ptr<MalType> MalCallable::apply(MalContainer* args) const
+std::shared_ptr<MalType> MalCallable::evaluate(MalContainer* args) const
 {
     if (m_callable) {
         return m_callable(args);
