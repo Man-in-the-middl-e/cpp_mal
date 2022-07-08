@@ -125,7 +125,71 @@ std::shared_ptr<MalType> evaluateSwap(const MalContainer* ls, Env& env)
     }
 }
 
-std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env)
+std::shared_ptr<MalType> evaluateQuote(const MalContainer* ast)
+{
+    if (ast->size() < 2) {
+        return std::make_unique<MalError>("Not enough arguments");
+    }
+    return ast->at(1);
+}
+
+std::shared_ptr<MalType> evaluateQuasiQuote(MalContainer* ast, Env& env)
+{
+    // TODO: factor out this error handling piece of code
+    if (ast->size() < 2) {
+        return std::make_unique<MalError>("Not enough arguments");
+    }
+    return EVAL(ast->at(1), env, false);
+
+}
+
+std::shared_ptr<MalType> evaluateUnquote(const MalContainer* ls, Env& env)
+{
+    if (ls->size() < 2) {
+        return std::make_unique<MalError>("Not enough arguments");
+    }
+    return EVAL(ls->at(1), env);
+}
+
+std::shared_ptr<MalType> evaluateSpliceUnQuote(const MalContainer* ls, Env& env)
+{
+    auto res = evaluateUnquote(ls, env);
+    if (!res->asMalContainer()) {
+        return res;
+    }
+    if (res->asMalContainer()->isEmpty()) {
+        return std::make_unique<MalError>("Can't splice empyt list");
+    }
+    // NOTE: if this won't work out in the future then use this in evaluateQuasiQuote() 
+    // and delet lookupSymobls from EVLA\eval_ast
+
+    /*    const auto argument = ast->at(1);
+    if (!argument->asMalContainer()) {
+        return argument;
+    }
+    
+    auto newContainer = std::make_shared<MalContainer>(ast->type());
+    for (const auto& elem : *argument->asMalContainer()) {
+        if (const auto ls = elem->asMalContainer(); ls && !ls->isEmpty()) {
+            const auto evaluatedList = EVAL(elem, env);
+            if (ls->at(0)->asString() == "splice-unquote") {
+                for (const auto& subElement : *evaluatedList->asMalContainer()) {
+                    newContainer->append(subElement);
+                }
+            } else {
+                newContainer->append(evaluatedList);
+            }
+        } else {
+            newContainer->append(elem);
+        }
+    }
+    return newContainer;
+    */
+    std::string splicedList = res->asString().substr(1, res->asString().size() - 2);
+    return std::make_shared<MalSymbol>(splicedList);
+}
+
+std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env, bool lookupSymoblsInEnv)
 {
     if (const auto container = ast->asMalContainer(); container) {
         if (container->isEmpty()) {
@@ -148,9 +212,17 @@ std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env)
             return evaluateReset(container, env);
         } else if (symbolStr == "swap!") {
             return evaluateSwap(container, env);
+        } else if (symbolStr == "quote") {
+            return evaluateQuote(container);
+        } else if (symbolStr == "quasiquote") {
+            return evaluateQuasiQuote(container, env);
+        } else if (symbolStr == "unquote") {
+            return evaluateUnquote(container, env);
+        } else if (symbolStr == "splice-unquote") {
+            return evaluateSpliceUnQuote(container, env);
         }
 
-        const auto evaluatedList = eval_ast(ast, env);
+        const auto evaluatedList = eval_ast(ast, env, lookupSymoblsInEnv);
         if (auto ls = evaluatedList->asMalContainer(); ls && !ls->isEmpty()) {
             const auto head = ls->head();
             if (const auto closure = head->asMalClosure(); closure) {
@@ -163,10 +235,10 @@ std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env)
         }
         return evaluatedList;
     }
-    return eval_ast(ast, env);
+    return eval_ast(ast, env, lookupSymoblsInEnv);
 }
 
-std::shared_ptr<MalType> eval_ast(std::shared_ptr<MalType> ast, Env& env)
+std::shared_ptr<MalType> eval_ast(std::shared_ptr<MalType> ast, Env& env, bool lookupSymoblsInEnv)
 {
     if (const auto container = ast->asMalContainer(); container) {
         if (container->isEmpty()) {
@@ -174,7 +246,7 @@ std::shared_ptr<MalType> eval_ast(std::shared_ptr<MalType> ast, Env& env)
         }
         auto newContainer = std::make_shared<MalContainer>(container->type());
         for (const auto& element : *container) {
-            if (const auto evaluatedElement = EVAL(element, env); evaluatedElement->asMalError()) {
+            if (const auto evaluatedElement = EVAL(element, env, lookupSymoblsInEnv); evaluatedElement->asMalError()) {
                 return evaluatedElement;
             } else {
                 newContainer->append(evaluatedElement);
@@ -182,7 +254,7 @@ std::shared_ptr<MalType> eval_ast(std::shared_ptr<MalType> ast, Env& env)
         }
         return newContainer;
     } else if (const auto symbol = ast->asMalSymbol(); symbol) {
-        const auto relatedEnv = env.find(symbol->asString());
+        const auto relatedEnv = lookupSymoblsInEnv ? env.find(symbol->asString()) : ast;
         if (!relatedEnv) {
             std::string error = symbol->asString() + " is not defined";
             return std::make_unique<MalError>(error);
@@ -194,7 +266,7 @@ std::shared_ptr<MalType> eval_ast(std::shared_ptr<MalType> ast, Env& env)
     } else if (const auto hashMap = ast->asMalHashMap(); hashMap) {
         auto newHashMap = std::make_shared<MalHashMap>();
         for (auto& [key, value] : *hashMap) {
-            newHashMap->insert(key, EVAL(value, env));
+            newHashMap->insert(key, EVAL(value, env, lookupSymoblsInEnv));
         }
         return newHashMap;
     }

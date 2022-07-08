@@ -168,6 +168,11 @@ public:
     std::string asString() const override;
     MalSymbol* asMalSymbol() override;
 
+    virtual bool operator==(MalType* type) const override
+    {
+        return type->asMalSymbol() && type->asString() == m_symbol;
+    }
+    
 private:
     std::string m_symbol;
 };

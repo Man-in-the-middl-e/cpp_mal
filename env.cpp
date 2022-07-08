@@ -34,7 +34,7 @@ GlobalEnv::GlobalEnv()
         { "+", std::make_shared<MalCallable>(plus) },
         { "-", std::make_shared<MalCallable>(minus) },
         { "/", std::make_shared<MalCallable>(divides) },
-        { "*", std::make_shared<MalCallable>(multiplies) },
+        { "*", std::make_shared<MalCallable>(multiplies) }
     };
 }
 

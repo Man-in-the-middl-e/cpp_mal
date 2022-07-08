@@ -39,3 +39,8 @@ if (${STEP} STREQUAL "step6")
     return()
 endif()
 
+if (${STEP} STREQUAL "step7")
+    add_executable(step7_quote step7_quote.cpp lexer.cpp reader.cpp maltypes.cpp env.cpp eval_ast.cpp buildins.cpp)
+    return()
+endif()
+
