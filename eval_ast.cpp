@@ -133,14 +133,42 @@ std::shared_ptr<MalType> evaluateQuote(const MalContainer* ast)
     return ast->at(1);
 }
 
+std::shared_ptr<MalType> evaluateQuasiQuoteHelper(std::shared_ptr<MalType> ast, Env& env)
+{
+    // TODO: add vector support
+    if (auto ls = ast->asMalContainer(); ls && !ls->isEmpty()) {
+        auto firstElemet = ls->at(0);
+        if (firstElemet->asString() == "unquote") {
+            return ls->at(1);
+        }
+        auto resultList = std::make_shared<MalList>();
+        if (auto firstElementAsContainer = firstElemet->asMalContainer(); firstElementAsContainer
+            && !firstElementAsContainer->isEmpty()
+            && firstElementAsContainer->at(0)->asString() == "splice-unquote") {
+            resultList->append(std::make_shared<MalSymbol>("concat"));
+            resultList->append(firstElementAsContainer->at(1));
+        } else {
+            resultList->append(std::make_shared<MalSymbol>("cons"));
+            resultList->append(evaluateQuasiQuoteHelper(firstElemet, env));
+        }
+        resultList->append(evaluateQuasiQuoteHelper(ls->tail(), env));
+        return resultList;
+    } else if (ast->asMalSymbol() || ast->asMalHashMap()) {
+        auto list = std::make_shared<MalList>();
+        list->append(std::make_shared<MalSymbol>("quote"));
+        list->append(ast);
+        return list;
+    }
+    return ast;
+}
+
 std::shared_ptr<MalType> evaluateQuasiQuote(MalContainer* ast, Env& env)
 {
-    // TODO: factor out this error handling piece of code
-    if (ast->size() < 2) {
-        return std::make_unique<MalError>("Not enough arguments");
+    auto quasiQuoteArgument = ast->tail();
+    if (quasiQuoteArgument->isEmpty()) {
+        return quasiQuoteArgument;
     }
-    return EVAL(ast->at(1), env, false);
-
+    return evaluateQuasiQuoteHelper(quasiQuoteArgument->at(0), env);
 }
 
 std::shared_ptr<MalType> evaluateUnquote(const MalContainer* ls, Env& env)
@@ -148,45 +176,7 @@ std::shared_ptr<MalType> evaluateUnquote(const MalContainer* ls, Env& env)
     if (ls->size() < 2) {
         return std::make_unique<MalError>("Not enough arguments");
     }
-    return EVAL(ls->at(1), env);
-}
-
-std::shared_ptr<MalType> evaluateSpliceUnQuote(const MalContainer* ls, Env& env)
-{
-    auto res = evaluateUnquote(ls, env);
-    if (!res->asMalContainer()) {
-        return res;
-    }
-    if (res->asMalContainer()->isEmpty()) {
-        return std::make_unique<MalError>("Can't splice empyt list");
-    }
-    // NOTE: if this won't work out in the future then use this in evaluateQuasiQuote() 
-    // and delet lookupSymobls from EVLA\eval_ast
-
-    /*    const auto argument = ast->at(1);
-    if (!argument->asMalContainer()) {
-        return argument;
-    }
-    
-    auto newContainer = std::make_shared<MalContainer>(ast->type());
-    for (const auto& elem : *argument->asMalContainer()) {
-        if (const auto ls = elem->asMalContainer(); ls && !ls->isEmpty()) {
-            const auto evaluatedList = EVAL(elem, env);
-            if (ls->at(0)->asString() == "splice-unquote") {
-                for (const auto& subElement : *evaluatedList->asMalContainer()) {
-                    newContainer->append(subElement);
-                }
-            } else {
-                newContainer->append(evaluatedList);
-            }
-        } else {
-            newContainer->append(elem);
-        }
-    }
-    return newContainer;
-    */
-    std::string splicedList = res->asString().substr(1, res->asString().size() - 2);
-    return std::make_shared<MalSymbol>(splicedList);
+    return ls->at(1);
 }
 
 std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env, bool lookupSymoblsInEnv)
@@ -195,7 +185,8 @@ std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env, bool looku
         if (container->isEmpty()) {
             return ast;
         }
-
+    
+        // TODO: move this lookup functionality to global env
         if (const auto symbolStr = container->at(0)->asString(); symbolStr == "def!") {
             return evaluateDef(container, env);
         } else if (symbolStr == "let*") {
@@ -215,11 +206,9 @@ std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env, bool looku
         } else if (symbolStr == "quote") {
             return evaluateQuote(container);
         } else if (symbolStr == "quasiquote") {
+            return EVAL(evaluateQuasiQuote(container, env), env);
+        } else if (symbolStr == "quasiquoteexpand") {
             return evaluateQuasiQuote(container, env);
-        } else if (symbolStr == "unquote") {
-            return evaluateUnquote(container, env);
-        } else if (symbolStr == "splice-unquote") {
-            return evaluateSpliceUnQuote(container, env);
         }
 
         const auto evaluatedList = eval_ast(ast, env, lookupSymoblsInEnv);

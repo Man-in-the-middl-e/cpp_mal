@@ -82,7 +82,7 @@ std::string MalContainer::asString() const
     std::stringstream ss;
     ss << (m_type == ContainerType::LIST ? '(' : '[');
     for (const auto& obj : m_data) {
-        ss << obj->asString() << (m_data.back() != obj ? " " : "");
+        ss << obj->asString() << (&obj != &m_data.back() ? " " : "");
     }
     ss << (m_type == ContainerType::LIST ? ')' : ']');
     return ss.str();
