@@ -74,20 +74,16 @@ std::vector<Token> Lexer::tokenize()
             tokens.push_back(makeOneCharToken(TokenType::RIGHT_PAREN));
             break;
         }
-        case '\'': {
-            tokens.push_back(makeOneCharToken(TokenType::SINGLE_QUOTE));
-            break;
-        }
-        case '`': {
-            tokens.push_back(makeOneCharToken(TokenType::APOSTROPHE));
-            break;
-        }
+        case '\'': 
+        case '`':
+        case '@':
         case '~': {
+            // try to match ~@
             if (match('@')) {
                 advance();
-                tokens.push_back(makeToken(TokenType::TILDE_AT, m_currentIndex - 2, 2));
+                tokens.push_back(makeToken(TokenType::MACRO, m_currentIndex - 2, 2));
             } else {
-                tokens.push_back(makeOneCharToken(TokenType::TILDE));
+                tokens.push_back(makeOneCharToken(TokenType::MACRO));
             }
             break;
         }
@@ -105,10 +101,6 @@ std::vector<Token> Lexer::tokenize()
         }
         case '^': {
             tokens.push_back(makeOneCharToken(TokenType::CARET));
-            break;
-        }
-        case '@': {
-            tokens.push_back(makeOneCharToken(TokenType::AT));
             break;
         }
         case '-': {

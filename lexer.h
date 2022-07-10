@@ -14,13 +14,8 @@ namespace mal {
     VARIANT(RIGHT_CURLY_BRACE) \
     VARIANT(LEFT_PAREN) \
     VARIANT(RIGHT_PAREN) \
-    VARIANT(APOSTROPHE) \
-    VARIANT(SINGLE_QUOTE) \
-    VARIANT(TILDE) \
     VARIANT(CARET) \
-    VARIANT(AT) \
     VARIANT(DOUBLE_STAR) \
-    VARIANT(TILDE_AT) /* ~@ */ \
     VARIANT(STRING) \
     VARIANT(NUMBER) \
     VARIANT(ERROR_UNTERMINATED_STRING) \
@@ -28,6 +23,7 @@ namespace mal {
     VARIANT(BOOLEAN) \
     VARIANT(NIL) \
     VARIANT(SYMBOL) /* all other tokens that are not implementd yet*/ \
+    VARIANT(MACRO) \
     VARIANT(LAST_TOKEN) \
 
 #define TOKEN_TYPE_VARIANT(NAME) NAME,

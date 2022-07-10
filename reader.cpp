@@ -38,7 +38,7 @@ std::shared_ptr<MalType> readFrom(const Reader& reader)
         return readVector(reader);
     case TokenType::LEFT_CURLY_BRACE:
         return readHashMap(reader);
-    case TokenType::AT:
+    case TokenType::MACRO:
         return readMacro(reader);
     default:
         return readAtom(reader);
@@ -126,17 +126,43 @@ std::shared_ptr<MalHashMap> readHashMap(const Reader& reader)
     return malHashMap;
 }
 
-// @atomName -> (deref atomName)
+std::string expandMacro(const Token& currentToken)
+{
+    switch (currentToken.token.at(0)) {
+    case '\'': {
+        return "quote";
+    }
+    case '`': {
+        return "quasiquote";
+    }
+    case '~': {
+        if (currentToken.token == "~@") {
+            return "splice-unquote";
+        } else {
+            return "unquote";
+        }
+    }
+    case '@': {
+        return "deref";
+    }
+    default: {
+        return "";
+    }
+    }
+}
+
 std::shared_ptr<MalType> readMacro(const Reader& reader)
 {
-    if (const auto currentToken = reader.next(); currentToken.type == TokenType::LAST_TOKEN)
-    {
-        return std::make_unique<MalError>("Atom name is expected");
+    const auto currentToken = reader.next();
+    if (reader.peek().type == TokenType::LAST_TOKEN) {
+        const std::string error = " expect an arugment"; 
+        return std::make_unique<MalError>(currentToken.token.data() + error);
     }
-    auto list = std::make_shared<MalList>();
-    list->append(std::make_shared<MalSymbol>("deref"));
-    list->append(readFrom(reader));
-    return list;
+
+    auto macroExpandedList = std::make_shared<MalList>();
+    macroExpandedList->append(std::make_shared<MalSymbol>(expandMacro(currentToken)));
+    macroExpandedList->append(readFrom(reader));
+    return macroExpandedList;
 }
 
 } // mal
