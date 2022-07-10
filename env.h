@@ -4,7 +4,7 @@
 #include <unordered_map>
 
 namespace mal {
-class MalCallable;
+class MalBuildin;
 class MalType;
 class MalContainer;
 class MalList;
@@ -20,7 +20,7 @@ private:
     GlobalEnv();
 
 private:
-    std::unordered_map<std::string, std::shared_ptr<MalCallable>> m_buildins;
+    std::unordered_map<std::string, std::shared_ptr<MalBuildin>> m_buildins;
     std::shared_ptr<MalList> m_argvs;
 };
 

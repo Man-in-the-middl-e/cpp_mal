@@ -22,7 +22,7 @@ class MalError;
 class MalBoolean;
 class MalNil;
 class MalClosure;
-class MalCallable;
+class MalBuildin;
 
 class MalType {
 public:
@@ -37,7 +37,7 @@ public:
     virtual MalBoolean* asMalBoolean() { return nullptr; }
     virtual MalNil* asMalNil() { return nullptr; }
     virtual MalClosure* asMalClosure() { return nullptr; }
-    virtual MalCallable* asMalCallable() { return nullptr; }
+    virtual MalBuildin* asMalBuildin() { return nullptr; }
     virtual MalAtom* asMalAtom() { return nullptr; }
 
     virtual bool operator==(MalType*) const { return false; }
@@ -276,14 +276,21 @@ private:
     std::string m_message;
 };
 
-class MalClosure : public MalType {
+
+class MalCallable : public MalType {
+public:
+    virtual std::shared_ptr<MalType> evaluate(MalContainer* arguments, Env& env) = 0;
+    static MalCallable* buildinOrClosure(MalType* callable);
+};
+
+class MalClosure : public MalCallable {
 public:
     MalClosure(const std::shared_ptr<MalType> parameters, const std::shared_ptr<MalType> body, const Env& env);
 
     std::string asString() const override;
     MalClosure* asMalClosure() override;
 
-    std::shared_ptr<MalType> evaluate(const MalContainer* arguments, Env& env);
+    std::shared_ptr<MalType> evaluate(MalContainer* arguments, Env& env) override;
     
 private:
     const std::shared_ptr<MalType> m_functionParameters;
@@ -291,23 +298,23 @@ private:
     Env m_relatedEnv;
 };
 
-class MalCallable : public MalType {
+class MalBuildin : public MalCallable {
 public:
-    using Callable = std::function<std::shared_ptr<MalType>(MalContainer*)>;
-    using CallableWithEnv = std::function<std::shared_ptr<MalType>(MalContainer*, Env&)>;
+    using Buildin = std::function<std::shared_ptr<MalType>(MalContainer*)>;
+    using BuildinWithEnv = std::function<std::shared_ptr<MalType>(MalContainer*, Env&)>;
 
-    MalCallable(Callable callable);
-    MalCallable(CallableWithEnv callableWithEnv);
+    MalBuildin(Buildin buildinFunc);
+    MalBuildin(BuildinWithEnv buildinFuncWithEnv);
 
     std::string asString() const override;
-    MalCallable* asMalCallable() override;
+    MalBuildin* asMalBuildin() override;
 
-    std::shared_ptr<MalType> evaluate(MalContainer* args, Env& env) const;
+    std::shared_ptr<MalType> evaluate(MalContainer* args, Env& env) override;
     std::shared_ptr<MalType> evaluate(MalContainer* args) const;
 
 private:
-    Callable m_callable;
-    CallableWithEnv m_callableWithEnv;
+    Buildin m_buildin;
+    BuildinWithEnv m_buildinWithEnv;
 };
 
 } // namespace mal

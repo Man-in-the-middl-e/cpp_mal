@@ -344,6 +344,14 @@ MalError* MalError::asMalError()
     return this;
 }
 
+MalCallable* MalCallable::buildinOrClosure(MalType* callable)
+{
+    if (auto malClosure = callable->asMalClosure(); malClosure) {
+        return malClosure;
+    }
+    return callable->asMalBuildin();
+}
+
 MalClosure::MalClosure(const std::shared_ptr<MalType> parameters, const std::shared_ptr<MalType> body, const Env& env)
     : m_functionParameters(parameters)
     , m_functionBody(body)
@@ -353,7 +361,7 @@ MalClosure::MalClosure(const std::shared_ptr<MalType> parameters, const std::sha
 
 std::string MalClosure::asString() const
 {
-    return "#<function>";
+    return "closure";
 }
 
 MalClosure* MalClosure::asMalClosure()
@@ -361,7 +369,7 @@ MalClosure* MalClosure::asMalClosure()
     return this;
 }
 
-std::shared_ptr<MalType> MalClosure::evaluate(const MalContainer* arguments, Env& env)
+std::shared_ptr<MalType> MalClosure::evaluate(MalContainer* arguments, Env& env)
 {
     // NOTE: we can't just make env parent of m_relatedEnv, 
     // because at some point env could become referene to deallocated memory,
@@ -373,40 +381,40 @@ std::shared_ptr<MalType> MalClosure::evaluate(const MalContainer* arguments, Env
     return res;
 }
 
-MalCallable::MalCallable(Callable callable)
-    : m_callable(std::move(callable))
+MalBuildin::MalBuildin(Buildin buildinFunc)
+    : m_buildin(std::move(buildinFunc))
 {
 }
 
-MalCallable::MalCallable(CallableWithEnv callableWithEnv)
-    : m_callableWithEnv(std::move(callableWithEnv))
+MalBuildin::MalBuildin(BuildinWithEnv buildinFuncWithEnv)
+    : m_buildinWithEnv(std::move(buildinFuncWithEnv))
 {
 }
 
-std::string MalCallable::asString() const
+std::string MalBuildin::asString() const
 {
-    return "callable";
+    return "building";
 }
 
-MalCallable* MalCallable::asMalCallable()
+MalBuildin* MalBuildin::asMalBuildin()
 {
     return this;
 }
 
-std::shared_ptr<MalType> MalCallable::evaluate(MalContainer* args, Env& env) const
+std::shared_ptr<MalType> MalBuildin::evaluate(MalContainer* args, Env& env)
 {
-    if (m_callable) {
-        return m_callable(args);
+    if (m_buildin) {
+        return m_buildin(args);
     }
-    return m_callableWithEnv(args, env);
+    return m_buildinWithEnv(args, env);
 }
 
-std::shared_ptr<MalType> MalCallable::evaluate(MalContainer* args) const
+std::shared_ptr<MalType> MalBuildin::evaluate(MalContainer* args) const
 {
-    if (m_callable) {
-        return m_callable(args);
+    if (m_buildin) {
+        return m_buildin(args);
     }
-    return std::make_unique<MalError>("Callable function is not defined");
+    return std::make_unique<MalError>("Buildin function is not defined");
 }
 
 } // namespace mal

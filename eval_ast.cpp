@@ -186,7 +186,6 @@ std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env, bool looku
             return ast;
         }
     
-        // TODO: move this lookup functionality to global env
         if (const auto symbolStr = container->at(0)->asString(); symbolStr == "def!") {
             return evaluateDef(container, env);
         } else if (symbolStr == "let*") {
@@ -214,12 +213,8 @@ std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env, bool looku
         const auto evaluatedList = eval_ast(ast, env, lookupSymoblsInEnv);
         if (auto ls = evaluatedList->asMalContainer(); ls && !ls->isEmpty()) {
             const auto head = ls->head();
-            if (const auto closure = head->asMalClosure(); closure) {
-                return closure->evaluate(ls->tail().get(), env);
-            }
-            else if (const auto func = head->asMalCallable(); func) {
-                const auto parameters = ls->tail();
-                return func->evaluate(parameters.get(), env);
+            if (MalCallable* callable = MalCallable::buildinOrClosure(head.get()); callable) {
+                return callable->evaluate(ls->tail().get(), env);
             }
         }
         return evaluatedList;
@@ -249,7 +244,7 @@ std::shared_ptr<MalType> eval_ast(std::shared_ptr<MalType> ast, Env& env, bool l
             return std::make_unique<MalError>(error);
         } else if(symbol->asString() == "*ARGV*") {
             // *ARGV* is the only one callable that doesn't require any arguments
-            return relatedEnv->asMalCallable()->evaluate(nullptr);
+            return relatedEnv->asMalBuildin()->evaluate(nullptr);
         }
         return relatedEnv;
     } else if (const auto hashMap = ast->asMalHashMap(); hashMap) {
