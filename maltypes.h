@@ -134,6 +134,9 @@ public:
     bool isEmpty() const;
     size_t size() const;
     ContainerType type() const;
+    void toList() {
+        m_type = ContainerType::LIST;
+    }
 
     std::shared_ptr<MalType> at(size_t index) const;
     std::shared_ptr<MalType> back() const;
@@ -151,6 +154,7 @@ private:
     ContainerType m_type;
 };
 
+// TODO: do we need MalList and MalVector???
 class MalList final : public MalContainer {
 public:
     MalList();

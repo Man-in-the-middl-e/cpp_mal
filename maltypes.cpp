@@ -139,7 +139,7 @@ std::shared_ptr<MalType> MalContainer::head() const
 
 std::shared_ptr<MalContainer> MalContainer::tail()
 {
-    if (m_data.begin() + 1 != m_data.end()) {
+    if (m_data.begin() != m_data.end()) {
         const std::vector<std::shared_ptr<MalType>> newData(m_data.begin() + 1, m_data.end());
         m_data = newData;
     } else {

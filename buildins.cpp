@@ -120,7 +120,7 @@ std::shared_ptr<MalType> list(MalContainer* args)
 std::shared_ptr<MalType> vec(MalContainer* args)
 {
     auto vector = std::make_shared<MalVector>();
-    if (args->size() >= 1) {
+    if (!args->isEmpty()) {
         if (!args->at(0)->asMalContainer()) {
             return std::make_unique<MalError>("Could only be applied to list or vectors");
         }

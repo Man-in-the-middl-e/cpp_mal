@@ -135,24 +135,30 @@ std::shared_ptr<MalType> evaluateQuote(const MalContainer* ast)
 
 std::shared_ptr<MalType> evaluateQuasiQuoteHelper(std::shared_ptr<MalType> ast, Env& env)
 {
-    // TODO: add vector support
-    if (auto ls = ast->asMalContainer(); ls && !ls->isEmpty()) {
-        auto firstElemet = ls->at(0);
-        if (firstElemet->asString() == "unquote") {
-            return ls->at(1);
-        }
+    if (auto ls = ast->asMalContainer(); ls) {
         auto resultList = std::make_shared<MalList>();
-        if (auto firstElementAsContainer = firstElemet->asMalContainer(); firstElementAsContainer
-            && !firstElementAsContainer->isEmpty()
-            && firstElementAsContainer->at(0)->asString() == "splice-unquote") {
-            resultList->append(std::make_shared<MalSymbol>("concat"));
-            resultList->append(firstElementAsContainer->at(1));
-        } else {
-            resultList->append(std::make_shared<MalSymbol>("cons"));
-            resultList->append(evaluateQuasiQuoteHelper(firstElemet, env));
+        if (ls->type() == MalContainer::ContainerType::VECTOR) {
+            resultList->append(std::make_shared<MalSymbol>("vec"));
+            ls->toList();
+            resultList->append(evaluateQuasiQuoteHelper(ast, env));
+            return resultList;
+        } else if (!ls->isEmpty()) {
+            auto firstElemet = ls->at(0);
+            if (firstElemet->asString() == "unquote") {
+                return ls->at(1);
+            }
+            if (auto firstElementAsContainer = firstElemet->asMalContainer(); firstElementAsContainer
+                && !firstElementAsContainer->isEmpty()
+                && firstElementAsContainer->at(0)->asString() == "splice-unquote") {
+                resultList->append(std::make_shared<MalSymbol>("concat"));
+                resultList->append(firstElementAsContainer->at(1));
+            } else {
+                resultList->append(std::make_shared<MalSymbol>("cons"));
+                resultList->append(evaluateQuasiQuoteHelper(firstElemet, env));
+            }
+            resultList->append(evaluateQuasiQuoteHelper(ls->tail(), env));
+            return resultList;
         }
-        resultList->append(evaluateQuasiQuoteHelper(ls->tail(), env));
-        return resultList;
     } else if (ast->asMalSymbol() || ast->asMalHashMap()) {
         auto list = std::make_shared<MalList>();
         list->append(std::make_shared<MalSymbol>("quote"));
@@ -169,14 +175,6 @@ std::shared_ptr<MalType> evaluateQuasiQuote(MalContainer* ast, Env& env)
         return quasiQuoteArgument;
     }
     return evaluateQuasiQuoteHelper(quasiQuoteArgument->at(0), env);
-}
-
-std::shared_ptr<MalType> evaluateUnquote(const MalContainer* ls, Env& env)
-{
-    if (ls->size() < 2) {
-        return std::make_unique<MalError>("Not enough arguments");
-    }
-    return ls->at(1);
 }
 
 std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env, bool lookupSymoblsInEnv)
