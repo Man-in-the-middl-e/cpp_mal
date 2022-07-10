@@ -144,7 +144,7 @@ std::shared_ptr<MalType> evaluateQuasiQuoteHelper(std::shared_ptr<MalType> ast, 
             return resultList;
         } else if (!ls->isEmpty()) {
             auto firstElemet = ls->at(0);
-            if (firstElemet->asString() == "unquote") {
+            if (ls->size() > 1 && firstElemet->asString() == "unquote") {
                 return ls->at(1);
             }
             if (auto firstElementAsContainer = firstElemet->asMalContainer(); firstElementAsContainer
