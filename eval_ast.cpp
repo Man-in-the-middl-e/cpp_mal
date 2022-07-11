@@ -177,7 +177,7 @@ std::shared_ptr<MalType> evaluateQuasiQuote(MalContainer* ast, Env& env)
     return evaluateQuasiQuoteHelper(quasiQuoteArgument->at(0), env);
 }
 
-std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env, bool lookupSymoblsInEnv)
+std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env)
 {
     if (const auto container = ast->asMalContainer(); container) {
         if (container->isEmpty()) {
@@ -208,7 +208,7 @@ std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env, bool looku
             return evaluateQuasiQuote(container, env);
         }
 
-        const auto evaluatedList = eval_ast(ast, env, lookupSymoblsInEnv);
+        const auto evaluatedList = eval_ast(ast, env);
         if (auto ls = evaluatedList->asMalContainer(); ls && !ls->isEmpty()) {
             const auto head = ls->head();
             if (MalCallable* callable = MalCallable::buildinOrClosure(head.get()); callable) {
@@ -217,10 +217,10 @@ std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env, bool looku
         }
         return evaluatedList;
     }
-    return eval_ast(ast, env, lookupSymoblsInEnv);
+    return eval_ast(ast, env);
 }
 
-std::shared_ptr<MalType> eval_ast(std::shared_ptr<MalType> ast, Env& env, bool lookupSymoblsInEnv)
+std::shared_ptr<MalType> eval_ast(std::shared_ptr<MalType> ast, Env& env)
 {
     if (const auto container = ast->asMalContainer(); container) {
         if (container->isEmpty()) {
@@ -228,7 +228,7 @@ std::shared_ptr<MalType> eval_ast(std::shared_ptr<MalType> ast, Env& env, bool l
         }
         auto newContainer = std::make_shared<MalContainer>(container->type());
         for (const auto& element : *container) {
-            if (const auto evaluatedElement = EVAL(element, env, lookupSymoblsInEnv); evaluatedElement->asMalError()) {
+            if (const auto evaluatedElement = EVAL(element, env); evaluatedElement->asMalError()) {
                 return evaluatedElement;
             } else {
                 newContainer->append(evaluatedElement);
@@ -236,7 +236,7 @@ std::shared_ptr<MalType> eval_ast(std::shared_ptr<MalType> ast, Env& env, bool l
         }
         return newContainer;
     } else if (const auto symbol = ast->asMalSymbol(); symbol) {
-        const auto relatedEnv = lookupSymoblsInEnv ? env.find(symbol->asString()) : ast;
+        const auto relatedEnv = env.find(symbol->asString());
         if (!relatedEnv) {
             std::string error = symbol->asString() + " is not defined";
             return std::make_unique<MalError>(error);
@@ -248,7 +248,7 @@ std::shared_ptr<MalType> eval_ast(std::shared_ptr<MalType> ast, Env& env, bool l
     } else if (const auto hashMap = ast->asMalHashMap(); hashMap) {
         auto newHashMap = std::make_shared<MalHashMap>();
         for (auto& [key, value] : *hashMap) {
-            newHashMap->insert(key, EVAL(value, env, lookupSymoblsInEnv));
+            newHashMap->insert(key, EVAL(value, env));
         }
         return newHashMap;
     }
