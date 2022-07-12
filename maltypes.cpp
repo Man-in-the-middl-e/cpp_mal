@@ -137,6 +137,15 @@ std::shared_ptr<MalType> MalContainer::head() const
     return m_data.at(0);
 }
 
+std::shared_ptr<MalContainer> MalContainer::tail(MalContainer* container)
+{
+    auto newContainer = std::make_shared<MalContainer>(container->type());
+    for (size_t elementIndex = 1; elementIndex < container->size(); ++elementIndex) {
+        newContainer->append(container->at(elementIndex));
+    }
+    return newContainer;
+}
+
 std::shared_ptr<MalContainer> MalContainer::tail()
 {
     if (m_data.begin() != m_data.end()) {
@@ -344,13 +353,6 @@ MalError* MalError::asMalError()
     return this;
 }
 
-MalCallable* MalCallable::buildinOrClosure(MalType* callable)
-{
-    if (auto malClosure = callable->asMalClosure(); malClosure) {
-        return malClosure;
-    }
-    return callable->asMalBuildin();
-}
 
 MalClosure::MalClosure(const std::shared_ptr<MalType> parameters, const std::shared_ptr<MalType> body, const Env& env)
     : m_functionParameters(parameters)
@@ -381,6 +383,16 @@ std::shared_ptr<MalType> MalClosure::evaluate(MalContainer* arguments, Env& env)
     return res;
 }
 
+bool MalClosure::getIsMacroFucntionCall() const
+{
+    return m_isMacroFunctionCall;
+}
+
+void MalClosure::setIsMacroFunctionCall(bool isMacro)
+{
+    m_isMacroFunctionCall = isMacro;
+}
+
 MalBuildin::MalBuildin(Buildin buildinFunc)
     : m_buildin(std::move(buildinFunc))
 {
@@ -393,7 +405,7 @@ MalBuildin::MalBuildin(BuildinWithEnv buildinFuncWithEnv)
 
 std::string MalBuildin::asString() const
 {
-    return "building";
+    return "buildin";
 }
 
 MalBuildin* MalBuildin::asMalBuildin()

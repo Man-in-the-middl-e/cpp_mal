@@ -144,6 +144,8 @@ public:
     std::shared_ptr<MalType> head() const;
     std::shared_ptr<MalContainer> tail();
 
+    static std::shared_ptr<MalContainer> tail(MalContainer* container);
+
     std::vector<std::shared_ptr<MalType>>::iterator begin();
     std::vector<std::shared_ptr<MalType>>::iterator end();
 
@@ -284,7 +286,6 @@ private:
 class MalCallable : public MalType {
 public:
     virtual std::shared_ptr<MalType> evaluate(MalContainer* arguments, Env& env) = 0;
-    static MalCallable* buildinOrClosure(MalType* callable);
 };
 
 class MalClosure : public MalCallable {
@@ -295,11 +296,15 @@ public:
     MalClosure* asMalClosure() override;
 
     std::shared_ptr<MalType> evaluate(MalContainer* arguments, Env& env) override;
-    
+
+    bool getIsMacroFucntionCall() const;
+    void setIsMacroFunctionCall(bool isMacro);
+
 private:
     const std::shared_ptr<MalType> m_functionParameters;
     const std::shared_ptr<MalType> m_functionBody;
     Env m_relatedEnv;
+    bool m_isMacroFunctionCall { false };
 };
 
 class MalBuildin : public MalCallable {

@@ -44,3 +44,8 @@ if (${STEP} STREQUAL "step7")
     return()
 endif()
 
+if (${STEP} STREQUAL "step8")
+    add_executable(step8_macros step8_macros.cpp lexer.cpp reader.cpp maltypes.cpp env.cpp eval_ast.cpp buildins.cpp)
+    return()
+endif()
+

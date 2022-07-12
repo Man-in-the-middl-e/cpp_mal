@@ -156,7 +156,7 @@ std::shared_ptr<MalType> evaluateQuasiQuoteHelper(std::shared_ptr<MalType> ast, 
                 resultList->append(std::make_shared<MalSymbol>("cons"));
                 resultList->append(evaluateQuasiQuoteHelper(firstElemet, env));
             }
-            resultList->append(evaluateQuasiQuoteHelper(ls->tail(), env));
+            resultList->append(evaluateQuasiQuoteHelper(MalContainer::tail(ls), env));
             return resultList;
         }
     } else if (ast->asMalSymbol() || ast->asMalHashMap()) {
@@ -170,11 +170,60 @@ std::shared_ptr<MalType> evaluateQuasiQuoteHelper(std::shared_ptr<MalType> ast, 
 
 std::shared_ptr<MalType> evaluateQuasiQuote(MalContainer* ast, Env& env)
 {
-    auto quasiQuoteArgument = ast->tail();
+    // buildin or env clsoure could be passed here, so we have to create a new list
+    // TODO: get rid of member function call of .tail() everywhere
+    auto quasiQuoteArgument = MalContainer::tail(ast);
     if (quasiQuoteArgument->isEmpty()) {
         return quasiQuoteArgument;
     }
     return evaluateQuasiQuoteHelper(quasiQuoteArgument->at(0), env);
+}
+
+std::shared_ptr<MalType> evaluateDefMacro(const MalContainer* ls, Env& env)
+{
+    auto macroArguments = evaluateDef(ls, env);
+    if (auto closure = macroArguments->asMalClosure(); closure) {
+        closure->setIsMacroFunctionCall(true);
+    }
+    return macroArguments;
+}
+
+MalClosure* getMacroFunction(std::shared_ptr<MalType> ast, Env& env)
+{
+    auto ls = ast->asMalContainer();
+    if (!ls || ls->isEmpty()) {
+        return nullptr;
+    }
+
+    auto firstElemt = ls->at(0);
+    if (auto symobl = firstElemt->asMalSymbol(); symobl) {
+        if (auto callable = env.find(symobl->asString()); callable) {
+            auto macroFunction = callable->asMalClosure();
+            if (macroFunction && macroFunction->getIsMacroFucntionCall()) {
+                return macroFunction;
+            }
+        }
+    }
+    return nullptr;
+}
+
+std::shared_ptr<MalType> tryToExpandMacro(std::shared_ptr<MalType> ast, Env& env)
+{
+    auto macroFunction = getMacroFunction(ast, env);
+    if (auto ls = ast->asMalContainer(); ls && macroFunction) {
+        auto args = ls->tail();
+        auto res = macroFunction->evaluate(args.get(), env);
+        return tryToExpandMacro(res, env);
+    }
+    return ast;
+}
+
+std::shared_ptr<MalType> evaluateMacroExpansion(const MalContainer* ls, Env& env)
+{
+    if (ls->size() < 2) {
+        return std::make_unique<MalError>("Not engough arguments for macro expansion");
+    }
+    return tryToExpandMacro(ls->at(1), env);
 }
 
 std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env)
@@ -183,7 +232,7 @@ std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env)
         if (container->isEmpty()) {
             return ast;
         }
-    
+
         if (const auto symbolStr = container->at(0)->asString(); symbolStr == "def!") {
             return evaluateDef(container, env);
         } else if (symbolStr == "let*") {
@@ -206,13 +255,20 @@ std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env)
             return EVAL(evaluateQuasiQuote(container, env), env);
         } else if (symbolStr == "quasiquoteexpand") {
             return evaluateQuasiQuote(container, env);
+        } else if (symbolStr == "defmacro!") {
+            return evaluateDefMacro(container, env);
+        } else if (symbolStr == "macroexpand") {
+            return evaluateMacroExpansion(container, env);
         }
 
         const auto evaluatedList = eval_ast(ast, env);
         if (auto ls = evaluatedList->asMalContainer(); ls && !ls->isEmpty()) {
             const auto head = ls->head();
-            if (MalCallable* callable = MalCallable::buildinOrClosure(head.get()); callable) {
-                return callable->evaluate(ls->tail().get(), env);
+            if (auto closure = head->asMalClosure(); closure) {
+                auto returnValue = closure->evaluate(ls->tail().get(), env);
+                return closure->getIsMacroFucntionCall() ? EVAL(returnValue, env) : returnValue;
+            } else if (auto buildin = head->asMalBuildin(); buildin) {
+                return buildin->evaluate(ls->tail().get(), env);
             }
         }
         return evaluatedList;
