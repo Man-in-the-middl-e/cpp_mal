@@ -28,6 +28,9 @@ GlobalEnv::GlobalEnv()
         { "*ARGV*", std::make_shared<MalBuildin>(argv) },
         { "cons", std::make_shared<MalBuildin>(cons) },
         { "concat", std::make_shared<MalBuildin>(concat) },
+        { "nth", std::make_shared<MalBuildin>(nth)},
+        { "first", std::make_shared<MalBuildin>(first)},
+        { "rest", std::make_shared<MalBuildin>(rest)},
 
         { "=", std::make_shared<MalBuildin>(equal) },
         { "<", std::make_shared<MalBuildin>(less) },

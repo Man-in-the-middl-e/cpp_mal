@@ -338,4 +338,39 @@ std::shared_ptr<MalType> concat(MalContainer* args)
     return list;
 }
 
+std::shared_ptr<MalType> nth(MalContainer* args)
+{
+    if (args->isEmpty() || !args->at(0)->asMalContainer()) {
+        return std::make_unique<MalError>("List or vector is expected");
+    }
+
+    if (args->size() == 1 || !args->at(1)->asMalNumber()) {
+        return std::make_unique<MalError>("Integer index is expected");
+    }
+
+    auto container = args->at(0)->asMalContainer();
+    size_t nthElemet = args->at(1)->asMalNumber()->getValue();
+    return nthElemet >= container->size() ? std::make_shared<MalNil>() : container->at(nthElemet);
+}
+
+std::shared_ptr<MalType> first(MalContainer* args)
+{
+    if (args->isEmpty() || !args->at(0)->asMalContainer()) {
+        return std::make_shared<MalNil>();
+    }
+
+    auto container = args->at(0)->asMalContainer();
+    return container->isEmpty() ? std::make_shared<MalNil>() : container->at(0);
+}
+
+std::shared_ptr<MalType> rest(MalContainer* args) 
+{
+    if (args->isEmpty() || !args->at(0)->asMalContainer()) {
+        return std::make_shared<MalList>();
+    }
+    auto tail = MalContainer::tail(args->at(0)->asMalContainer());
+    tail->toList();
+    return tail;
+}
+
 } // mal
