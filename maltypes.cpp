@@ -338,21 +338,25 @@ MalHashMap::HashMapIteraotr MalHashMap::find(const std::string& key)
     return m_hashMap.find(key);
 }
 
-MalError::MalError(const std::string& message)
+MalException::MalException(const std::string& message)
     : m_message(message)
 {
 }
 
-std::string MalError::asString() const
+std::string MalException::asString() const
 {
-    return "ERROR: " + m_message;
+    return m_message;
 }
 
-MalError* MalError::asMalError()
+MalException* MalException::asMalException()
 {
     return this;
 }
 
+std::shared_ptr<MalException> MalException::throwException(const std::string& message)
+{
+    return std::make_shared<MalException>("Exception: " + message);
+}
 
 MalClosure::MalClosure(const std::shared_ptr<MalType> parameters, const std::shared_ptr<MalType> body, const Env& env)
     : m_functionParameters(parameters)
@@ -426,7 +430,7 @@ std::shared_ptr<MalType> MalBuildin::evaluate(MalContainer* args) const
     if (m_buildin) {
         return m_buildin(args);
     }
-    return std::make_unique<MalError>("Buildin function is not defined");
+    return MalException::throwException("Buildin function is not defined");
 }
 
 } // namespace mal

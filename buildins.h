@@ -38,4 +38,5 @@ std::shared_ptr<MalType> nth(MalContainer* args);
 std::shared_ptr<MalType> first(MalContainer* args);
 std::shared_ptr<MalType> rest(MalContainer* args);
 std::shared_ptr<MalType> cond(MalContainer* args);
+std::shared_ptr<MalType> malThrow(MalContainer* args);
 } // mal

@@ -14,7 +14,7 @@ namespace mal {
 std::shared_ptr<MalType> compareNumbers(MalContainer* numbers, char op, bool equal = false)
 {
     if (numbers->size() <= 1) {
-        return std::make_unique<MalError>("Not enough arguments");
+        return MalException::throwException("Not enough arguments");
     }
 
     auto lhs = numbers->at(0)->asMalNumber();
@@ -29,16 +29,16 @@ std::shared_ptr<MalType> compareNumbers(MalContainer* numbers, char op, bool equ
         }
         return std::make_shared<MalBoolean>(res);
     }
-    return std::make_unique<MalError>("Could compare only numbers");
+    return MalException::throwException("Could compare only numbers");
 }
 
 std::shared_ptr<MalType> applyArithmeticOperations(MalContainer* arguments, std::function<int(int, int)> op)
 {
     if (arguments->isEmpty() || arguments->size() == 1) {
-        return std::make_unique<MalError>("Not enough arguments");
+        return MalException::throwException("Not enough arguments");
     }
     if (const auto baseNumber = arguments->head()->asMalNumber(); !baseNumber) {
-        return std::make_unique<MalError>("Couldn't apply arithmetic operation to not a number");
+        return MalException::throwException("Couldn't apply arithmetic operation to not a number");
     } else {
         int res = baseNumber->getValue();
         for (size_t i = 1; i < arguments->size(); ++i) {
@@ -122,7 +122,7 @@ std::shared_ptr<MalType> vec(MalContainer* args)
     auto vector = std::make_shared<MalVector>();
     if (!args->isEmpty()) {
         if (!args->at(0)->asMalContainer()) {
-            return std::make_unique<MalError>("Could only be applied to list or vectors");
+            return MalException::throwException("Could only be applied to list or vectors");
         }
         for (const auto& obj : *args->at(0)->asMalContainer()) {
             vector->append(obj);
@@ -161,7 +161,7 @@ std::shared_ptr<MalType> count(MalContainer* args)
 std::shared_ptr<MalType> equal(MalContainer* args)
 {
     if (args->size() <= 1) {
-        return std::make_unique<MalError>("Not enough arguments");
+        return MalException::throwException("Not enough arguments");
     }
     auto lhs = args->at(0).get();
     auto rhs = args->at(1).get();
@@ -191,7 +191,7 @@ std::shared_ptr<MalType> greaterEqual(MalContainer* args)
 std::shared_ptr<MalType> malNot(MalContainer* args)
 {
     if (args->isEmpty()) {
-        return std::make_unique<MalError>("Not enough argumetns for not operator");
+        return MalException::throwException("Not enough argumetns for not operator");
     }
     const auto predicate = args->at(0)->asString();
     return std::make_shared<MalBoolean>(predicate == "nil" || predicate == "false");
@@ -244,7 +244,7 @@ std::optional<std::string> readFile(const std::string& filePath)
 std::shared_ptr<MalType> slurp(MalContainer* args, Env&)
 {
     if (args->isEmpty()) {
-        return std::make_unique<MalError>("slurp expect file name");
+        return MalException::throwException("slurp expect file name");
     }
 
     auto fileContent = readFile(args->at(0)->asString());
@@ -252,13 +252,13 @@ std::shared_ptr<MalType> slurp(MalContainer* args, Env&)
         return std::make_shared<MalSymbol>('"' + MalString::escapeString(fileContent.value()) + '"');
     }
 
-    return std::make_unique<MalError>("Couldn't open the file");
+    return MalException::throwException("Couldn't open the file");
 }
 
 std::shared_ptr<MalType> eval(MalContainer* args, Env& env)
 {
     if (args->isEmpty()) {
-        return std::make_unique<MalError>("eval <ast>");
+        return MalException::throwException("eval <ast>");
     }
     // TODO: make copy ctor
     // TODO: don't create new container
@@ -282,19 +282,19 @@ std::shared_ptr<MalType> loadFile(MalContainer* args, Env& env)
         std::cout << eval(ast->asMalContainer(), env)->asString() << std::endl;
         return std::make_shared<MalNil>();
     }
-    return std::make_shared<MalError>("Failed to load file");
+    return std::make_shared<MalException>("Failed to load file");
 }
 
 std::shared_ptr<MalType> deref(MalContainer* args)
 {
     if (args->size() < 1) {
-        return std::make_unique<MalError>("Not enough arguments");
+        return MalException::throwException("Not enough arguments");
     }
 
     if (const auto malAtom = args->at(0); malAtom->asMalAtom()) {
         return malAtom->asMalAtom()->deref();
     }
-    return std::make_unique<MalError>("Value is not an atom");;
+    return MalException::throwException("Value is not an atom");;
 }
 
 std::shared_ptr<MalType> argv(MalContainer*)
@@ -305,7 +305,7 @@ std::shared_ptr<MalType> argv(MalContainer*)
 std::shared_ptr<MalType> cons(MalContainer *args)
 {
     if (args->size() < 2) {
-        return std::make_unique<MalError>("Not enough arguments");
+        return MalException::throwException("Not enough arguments");
     }
     if (auto originalContainer = args->at(1)->asMalContainer(); originalContainer) {
         auto list = std::make_shared<MalList>();
@@ -315,7 +315,7 @@ std::shared_ptr<MalType> cons(MalContainer *args)
         }
         return list;
     }
-    return std::make_unique<MalError>("Can append only to vectors and list");
+    return MalException::throwException("Can append only to vectors and list");
 }
 
 std::shared_ptr<MalType> concat(MalContainer* args)
@@ -341,16 +341,16 @@ std::shared_ptr<MalType> concat(MalContainer* args)
 std::shared_ptr<MalType> nth(MalContainer* args)
 {
     if (args->isEmpty() || !args->at(0)->asMalContainer()) {
-        return std::make_unique<MalError>("List or vector is expected");
+        return MalException::throwException("List or vector is expected");
     }
 
     if (args->size() == 1 || !args->at(1)->asMalNumber()) {
-        return std::make_unique<MalError>("Integer index is expected");
+        return MalException::throwException("Integer index is expected");
     }
 
     auto container = args->at(0)->asMalContainer();
     size_t nthElemet = args->at(1)->asMalNumber()->getValue();
-    return nthElemet >= container->size() ? std::make_shared<MalNil>() : container->at(nthElemet);
+    return nthElemet >= container->size() ? MalException::throwException("Index out of range") : container->at(nthElemet);
 }
 
 std::shared_ptr<MalType> first(MalContainer* args)
@@ -388,6 +388,14 @@ std::shared_ptr<MalType> cond(MalContainer* args)
     
     auto rest = args->tail()->tail();
     return cond(rest.get());
+}
+
+std::shared_ptr<MalType> malThrow(MalContainer* args)
+{
+    if (args->isEmpty()) {
+        return std::make_shared<MalNil>();
+    }
+    return MalException::throwException(args->at(0)->asString());
 }
 
 } // mal

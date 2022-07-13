@@ -18,7 +18,7 @@ class MalContainer;
 class MalSymbol;
 class MalString;
 class MalHashMap;
-class MalError;
+class MalException;
 class MalBoolean;
 class MalNil;
 class MalClosure;
@@ -33,7 +33,7 @@ public:
     virtual MalSymbol* asMalSymbol() { return nullptr; }
     virtual MalString* asMalString() { return nullptr; }
     virtual MalHashMap* asMalHashMap() { return nullptr; }
-    virtual MalError* asMalError() { return nullptr; }
+    virtual MalException* asMalException() { return nullptr; }
     virtual MalBoolean* asMalBoolean() { return nullptr; }
     virtual MalNil* asMalNil() { return nullptr; }
     virtual MalClosure* asMalClosure() { return nullptr; }
@@ -271,12 +271,14 @@ private:
     std::unordered_map<std::string, std::shared_ptr<MalType>> m_hashMap;
 };
 
-class MalError : public MalType {
+class MalException : public MalType {
 public:
-    MalError(const std::string& message);
+    MalException(const std::string& message);
 
     std::string asString() const override;
-    MalError* asMalError() override;
+    MalException* asMalException() override;
+
+    static std::shared_ptr<MalException> throwException(const std::string& message);
 
 private:
     std::string m_message;

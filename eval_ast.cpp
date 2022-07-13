@@ -2,6 +2,8 @@
 
 #include "maltypes.h"
 
+#include <assert.h>
+
 namespace mal {
 
 std::shared_ptr<MalType> evaluateFunc(const MalContainer* ls, Env& env)
@@ -14,10 +16,11 @@ std::shared_ptr<MalType> evaluateFunc(const MalContainer* ls, Env& env)
 std::shared_ptr<MalType> evaluateDo(MalContainer* ls, Env& env)
 {
     if (ls->size() == 1) {
-        return std::make_unique<MalError>("not enough arguments");
+        return MalException::throwException("not enough arguments");
+    } else if (auto result = eval_ast(ls->tail(), env); result->asMalContainer()) {
+        return result->asMalContainer()->back();
     } else {
-        auto evaluatedList = eval_ast(ls->tail(), env);
-        return evaluatedList->asMalContainer()->back();
+        return result;
     }
 }
 
@@ -27,7 +30,7 @@ std::shared_ptr<MalType> evaluateIf(const MalContainer* ls, Env& env)
     // if - 1, cond - 1, tureBranch - 1 = 1 + 1 + 1 = 3
     const size_t numberOfArguments = 3;
     if (ls->size() < numberOfArguments) {
-        return std::make_unique<MalError>("Not enough arguments for if statement");
+        return MalException::throwException("Not enough arguments for if statement");
     }
 
     const auto ifCondition = ls->at(1);
@@ -59,13 +62,13 @@ std::shared_ptr<MalType> evaluateLet(const MalContainer* ls, Env& env)
 std::shared_ptr<MalType> evaluateDef(const MalContainer* ls, Env& env)
 {
     if (ls->size() <= 2) {
-        return std::make_unique<MalError>("Not enough arguments");
+        return MalException::throwException("Not enough arguments");
     }
 
     const auto envName = ls->at(1)->asString();
     const auto envArguments = EVAL(ls->at(2), env);
 
-    if (!envArguments->asMalError()) {
+    if (!envArguments->asMalException()) {
         env.set(envName, envArguments);
     }
     return envArguments;
@@ -74,7 +77,7 @@ std::shared_ptr<MalType> evaluateDef(const MalContainer* ls, Env& env)
 std::shared_ptr<MalType> evaluateAtom(const MalContainer* ls, Env& env)
 {
     if (ls->size() < 2) {
-        return std::make_unique<MalError>("Not enough arguments");
+        return MalException::throwException("Not enough arguments");
     }
 
     const auto atomValue = EVAL(ls->at(1), env);
@@ -84,14 +87,14 @@ std::shared_ptr<MalType> evaluateAtom(const MalContainer* ls, Env& env)
 std::shared_ptr<MalType> evaluateReset(const MalContainer* ls, Env& env)
 {
     if (ls->size() <= 2) {
-        return std::make_unique<MalError>("Not enough arguments");
+        return MalException::throwException("Not enough arguments");
     }
 
     const auto atomName = ls->at(1)->asString();
     if (const auto maybeAtom = env.find(atomName); !maybeAtom) {
-        return std::make_unique<MalError>(atomName + " is not defined");
+        return MalException::throwException(atomName + " is not defined");
     } else if (!maybeAtom->asMalAtom()) {
-        return std::make_unique<MalError>("This operation could only be applied to atoms");
+        return MalException::throwException("This operation could only be applied to atoms");
     } else {
         // NOTE: can you reset new atom with new atom?
         const auto newValue = EVAL(ls->at(2), env);
@@ -103,14 +106,14 @@ std::shared_ptr<MalType> evaluateReset(const MalContainer* ls, Env& env)
 std::shared_ptr<MalType> evaluateSwap(const MalContainer* ls, Env& env)
 {
     if (ls->size() <= 2) {
-        return std::make_unique<MalError>("Not enough arguments");
+        return MalException::throwException("Not enough arguments");
     }
 
     const auto atomName = ls->at(1)->asString();
     if (const auto maybeAtom = env.find(atomName); !maybeAtom) {
-        return std::make_unique<MalError>(atomName + " is not defined");
+        return MalException::throwException(atomName + " is not defined");
     } else if (!maybeAtom->asMalAtom()) {
-        return std::make_unique<MalError>("This operation could only be applied to atoms");
+        return MalException::throwException("This operation could only be applied to atoms");
     } else {
         const auto function = EVAL(ls->at(2), env);
         const auto functionAst = std::make_shared<MalContainer>(ls->type());
@@ -128,7 +131,7 @@ std::shared_ptr<MalType> evaluateSwap(const MalContainer* ls, Env& env)
 std::shared_ptr<MalType> evaluateQuote(const MalContainer* ast)
 {
     if (ast->size() < 2) {
-        return std::make_unique<MalError>("Not enough arguments");
+        return MalException::throwException("Not enough arguments");
     }
     return ast->at(1);
 }
@@ -221,9 +224,42 @@ std::shared_ptr<MalType> tryToExpandMacro(std::shared_ptr<MalType> ast, Env& env
 std::shared_ptr<MalType> evaluateMacroExpansion(const MalContainer* ls, Env& env)
 {
     if (ls->size() < 2) {
-        return std::make_unique<MalError>("Not engough arguments for macro expansion");
+        return MalException::throwException("Not engough arguments for macro expansion");
     }
     return tryToExpandMacro(ls->at(1), env);
+}
+
+std::string extractExcetpionMessage(const MalException* exception)
+{
+    auto exceptionString = exception->asString();
+    assert(exceptionString.starts_with("Exception: "));
+
+    auto msgBegins = exceptionString.find_first_of(':');
+    return msgBegins + 2 < exceptionString.size() ? exceptionString.substr(msgBegins + 2) : "";
+}
+
+std::shared_ptr<MalType> evaluateTry(const MalContainer* ls, Env& env)
+{
+    if (ls->size() == 1) {
+        return std::make_shared<MalNil>();
+    }
+
+    auto tryBlock = EVAL(ls->at(1), env);
+    if (ls->size() > 2 && tryBlock->asMalException()) {
+        if (auto catchBlock = ls->at(2)->asMalContainer(); catchBlock && !catchBlock->isEmpty() && catchBlock->at(0)->asString() == "catch*") {
+            if (catchBlock->size() <= 2) {
+                return std::make_shared<MalNil>();
+            }
+            auto exceptionName = catchBlock->at(1)->asString();
+            auto exceptioinAction = catchBlock->at(2);
+            // TODO: come up with other exception handling logic
+            auto strException = std::make_shared<MalString>(extractExcetpionMessage(tryBlock->asMalException()));
+            Env exceptionEnv(&env);
+            env.set(exceptionName, strException);
+            return EVAL(exceptioinAction, exceptionEnv);
+        }
+    }
+    return tryBlock;
 }
 
 std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env)
@@ -233,6 +269,7 @@ std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env)
             return ast;
         }
 
+        // TODO: move some of this fucntions to global env
         if (const auto symbolStr = container->at(0)->asString(); symbolStr == "def!") {
             return evaluateDef(container, env);
         } else if (symbolStr == "let*") {
@@ -259,6 +296,8 @@ std::shared_ptr<MalType> EVAL(std::shared_ptr<MalType> ast, Env& env)
             return evaluateDefMacro(container, env);
         } else if (symbolStr == "macroexpand") {
             return evaluateMacroExpansion(container, env);
+        } else if (symbolStr == "try*") {
+            return evaluateTry(container, env);
         }
 
         const auto evaluatedList = eval_ast(ast, env);
@@ -284,7 +323,7 @@ std::shared_ptr<MalType> eval_ast(std::shared_ptr<MalType> ast, Env& env)
         }
         auto newContainer = std::make_shared<MalContainer>(container->type());
         for (const auto& element : *container) {
-            if (const auto evaluatedElement = EVAL(element, env); evaluatedElement->asMalError()) {
+            if (const auto evaluatedElement = EVAL(element, env); evaluatedElement->asMalException()) {
                 return evaluatedElement;
             } else {
                 newContainer->append(evaluatedElement);
@@ -294,8 +333,7 @@ std::shared_ptr<MalType> eval_ast(std::shared_ptr<MalType> ast, Env& env)
     } else if (const auto symbol = ast->asMalSymbol(); symbol) {
         const auto relatedEnv = env.find(symbol->asString());
         if (!relatedEnv) {
-            std::string error = symbol->asString() + " is not defined";
-            return std::make_unique<MalError>(error);
+            return MalException::throwException("\"'" + symbol->asString() + "'" + " not found\"");
         } else if(symbol->asString() == "*ARGV*") {
             // *ARGV* is the only one callable that doesn't require any arguments
             return relatedEnv->asMalBuildin()->evaluate(nullptr);

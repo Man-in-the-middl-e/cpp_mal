@@ -62,7 +62,7 @@ std::shared_ptr<MalType> readAtom(const Reader& reader)
         // TODO: create separate type
         return std::make_shared<MalString>(currentToken.token);
     case TokenType::ERROR_UNTERMINATED_STRING:
-        return std::make_shared<MalError>("Unterminated String");
+        return std::make_shared<MalException>("Unterminated String");
     default:
         return std::make_shared<MalSymbol>(currentToken.token);
     }
@@ -156,7 +156,7 @@ std::shared_ptr<MalType> readMacro(const Reader& reader)
     const auto currentToken = reader.next();
     if (reader.peek().type == TokenType::LAST_TOKEN) {
         const std::string error = " expect an arugment"; 
-        return std::make_unique<MalError>(currentToken.token.data() + error);
+        return MalException::throwException(currentToken.token.data() + error);
     }
 
     auto macroExpandedList = std::make_shared<MalList>();
