@@ -373,4 +373,21 @@ std::shared_ptr<MalType> rest(MalContainer* args)
     return tail;
 }
 
+std::shared_ptr<MalType> cond(MalContainer* args)
+{
+    // TODO: this should be a macro, for now there is no way to define buildin macros
+    if (args->size() < 2) {
+        return std::make_shared<MalNil>();
+    }
+
+    auto trueCondtion = args->at(0);
+    auto trueBranch = args->at(1);
+    if (trueCondtion->asString() != "false" && trueBranch->asString() != "nil") {
+        return trueBranch;
+    }
+    
+    auto rest = args->tail()->tail();
+    return cond(rest.get());
+}
+
 } // mal

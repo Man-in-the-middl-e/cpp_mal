@@ -37,4 +37,5 @@ std::shared_ptr<MalType> vec(MalContainer* args);
 std::shared_ptr<MalType> nth(MalContainer* args);
 std::shared_ptr<MalType> first(MalContainer* args);
 std::shared_ptr<MalType> rest(MalContainer* args);
+std::shared_ptr<MalType> cond(MalContainer* args);
 } // mal

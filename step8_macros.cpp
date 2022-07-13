@@ -47,11 +47,6 @@ int main(int argc, char* argv[])
 {
     mal::GlobalEnv::the().setUpArgv(argc, argv);
     static mal::Env env;
-    // TODO: implement this function using c++
-    auto value = eval(
-        read("(defmacro! cond (fn* (& xs) (if (> (count xs) 0) (list 'if (first xs) " 
-             "(if (> (count xs) 1) (nth xs 1) (throw \"odd number of forms to cond\")) (cons 'cond (rest (rest xs)))))))"),
-        env);
 
     if (argc > 1) {
         std::ostringstream malProgramToLoadFile;
