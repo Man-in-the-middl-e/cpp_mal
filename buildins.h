@@ -41,4 +41,11 @@ std::shared_ptr<MalType> cond(MalContainer* args);
 std::shared_ptr<MalType> malThrow(MalContainer* args);
 std::shared_ptr<MalType> apply(MalContainer* args, Env& env);
 std::shared_ptr<MalType> map(MalContainer* args, Env& env);
+std::shared_ptr<MalType> isNil(MalContainer* args);
+std::shared_ptr<MalType> isSymbol(MalContainer* args);
+std::shared_ptr<MalType> isTrue(MalContainer* args);
+std::shared_ptr<MalType> isFalse(MalContainer* args);
+std::shared_ptr<MalType> isVector(MalContainer* args);
+std::shared_ptr<MalType> isSequential(MalContainer* args);
+std::shared_ptr<MalType> isMap(MalContainer* args);
 } // mal

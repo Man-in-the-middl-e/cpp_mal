@@ -223,16 +223,16 @@ Token Lexer::matchEverythingElse(bool isKeyword)
     using namespace std::literals;
     const auto startPos = m_currentIndex - 1;
     auto isSeparator = [](char c) { return " )]},\n"sv.find(c) != std::string_view::npos; };
-    auto is = [this, startPos](std::string_view wordToMatch) {
-        return wordToMatch == m_program.substr(startPos, wordToMatch.size());
-    };
 
     while (!isEnd() && !isSeparator(peek())) {
         advance();
     }
 
     TokenType symbolType = isKeyword ? TokenType::KEYWORD : TokenType::SYMBOL;
-
+    
+    auto is = [this, startPos](std::string_view wordToMatch) {
+        return wordToMatch == m_program.substr(startPos, m_currentIndex - startPos);
+    };
     if (is("true") || is("false")) {
         symbolType = TokenType::BOOLEAN;
     } else if (is("nil")) {

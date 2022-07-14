@@ -443,4 +443,42 @@ std::shared_ptr<MalType> map(MalContainer* args, Env& env)
     return mappedList;
 }
 
+std::shared_ptr<MalType> isNil(MalContainer* args)
+{
+    return std::make_shared<MalBoolean>(args->head()->asMalNil() != nullptr);
+}
+
+std::shared_ptr<MalType> isSymbol(MalContainer* args)
+{
+    return std::make_shared<MalBoolean>(args->head()->asMalSymbol() != nullptr);
+}
+
+std::shared_ptr<MalType> isTrue(MalContainer* args)
+{
+    auto boolean = args->head()->asMalBoolean() ;
+    return std::make_shared<MalBoolean>(boolean && boolean->asString() == "true");
+}
+
+std::shared_ptr<MalType> isFalse(MalContainer* args)
+{
+    auto boolean = args->head()->asMalBoolean() ;
+    return std::make_shared<MalBoolean>(boolean && boolean->asString() == "false");
+}
+
+std::shared_ptr<MalType> isVector(MalContainer* args)
+{
+    const auto list = args->head()->asMalContainer();
+    return std::make_shared<MalBoolean>(list != nullptr && list->type() == MalContainer::ContainerType::VECTOR);
+}
+
+std::shared_ptr<MalType> isSequential(MalContainer* args)
+{
+    return std::make_shared<MalBoolean>(!args->isEmpty() && args->at(0)->asMalContainer());
+}
+
+std::shared_ptr<MalType> isMap(MalContainer* args)
+{
+    return std::make_shared<MalBoolean>(!args->isEmpty() && args->at(0)->asMalHashMap());
+}
+
 } // mal
