@@ -32,7 +32,9 @@ GlobalEnv::GlobalEnv()
         { "first", std::make_shared<MalBuildin>(first) },
         { "rest", std::make_shared<MalBuildin>(rest) },
         { "cond", std::make_shared<MalBuildin>(cond) },
-        { "throw", std::make_shared<MalBuildin>(malThrow)},
+        { "throw", std::make_shared<MalBuildin>(malThrow) },
+        { "apply", std::make_shared<MalBuildin>(apply) },
+        { "map", std::make_shared<MalBuildin>(map) },
 
         { "=", std::make_shared<MalBuildin>(equal) },
         { "<", std::make_shared<MalBuildin>(less) },

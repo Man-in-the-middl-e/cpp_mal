@@ -398,4 +398,49 @@ std::shared_ptr<MalType> malThrow(MalContainer* args)
     return MalException::throwException(args->at(0)->asString());
 }
 
+std::shared_ptr<MalType> apply(MalContainer* args, Env& env)
+{
+    if (args->size() < 2) {
+        return MalException::throwException("not enough argumetns for apply");
+    }
+
+    auto function = MalCallable::builinOrCallable(args->at(0).get());
+    if (!function) {
+        return MalException::throwException("function is expected");
+    }
+
+    auto arguments = concat(args->tail()->asMalContainer());
+    return function->evaluate(arguments->asMalContainer(), env);
+}
+
+std::shared_ptr<MalType> map(MalContainer* args, Env& env)
+{
+    if (args->size() < 2) {
+        return MalException::throwException("not enough argumetns for map");
+    }
+
+    auto function = MalCallable::builinOrCallable(args->at(0).get());
+    if (!function) {
+        return MalException::throwException("function as first argument is expected");
+    }
+
+    auto lisToMapped = args->at(1)->asMalContainer();
+    if (!lisToMapped) {
+        return MalException::throwException("list or vector is expected");
+    }
+
+    auto mappedList = std::make_shared<MalList>();
+    for (auto element : *lisToMapped) {
+        // TODO: don't make stupid design decisions and assumptions)
+        auto elemAsList = std::make_shared<MalList>();
+        elemAsList->append(element);
+        if (auto mappedElemet = function->evaluate(elemAsList.get(), env); mappedElemet->asMalException()){
+            return mappedElemet;
+        } else {
+            mappedList->append(mappedElemet);
+        }
+    }
+    return mappedList;
+}
+
 } // mal

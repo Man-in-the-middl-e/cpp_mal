@@ -288,6 +288,7 @@ private:
 class MalCallable : public MalType {
 public:
     virtual std::shared_ptr<MalType> evaluate(MalContainer* arguments, Env& env) = 0;
+    static MalCallable* builinOrCallable(MalType* callable);
 };
 
 class MalClosure : public MalCallable {

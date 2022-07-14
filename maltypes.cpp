@@ -358,6 +358,14 @@ std::shared_ptr<MalException> MalException::throwException(const std::string& me
     return std::make_shared<MalException>("Exception: " + message);
 }
 
+MalCallable* MalCallable::builinOrCallable(MalType* callable)
+{
+    if (auto buildin = callable->asMalBuildin(); buildin) {
+        return buildin;
+    }
+    return callable->asMalClosure();
+}
+
 MalClosure::MalClosure(const std::shared_ptr<MalType> parameters, const std::shared_ptr<MalType> body, const Env& env)
     : m_functionParameters(parameters)
     , m_functionBody(body)
