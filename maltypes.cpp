@@ -321,7 +321,12 @@ MalHashMap* MalHashMap::asMalHashMap()
 
 void MalHashMap::insert(const std::string& key, std::shared_ptr<MalType> value)
 {
-    m_hashMap.insert({ key, value });
+    m_hashMap[key] = value;
+}
+
+void MalHashMap::remove(const std::string& key)
+{
+    m_hashMap.erase(key);
 }
 
 size_t MalHashMap::size() const
@@ -342,6 +347,29 @@ MalHashMap::HashMapIteraotr MalHashMap::end()
 MalHashMap::HashMapIteraotr MalHashMap::find(const std::string& key)
 {
     return m_hashMap.find(key);
+}
+
+std::shared_ptr<MalList> MalHashMap::keys() const
+{
+    auto listOfKeys = std::make_shared<MalList>();
+    for (auto it = m_hashMap.begin(); it != m_hashMap.end(); ++it) {
+        const auto& [key, value] = *it;
+        listOfKeys->append(std::make_shared<MalSymbol>(key, key.starts_with(':') 
+                                                     ? MalSymbol::SymbolType::KEYWORD
+                                                     : MalSymbol::SymbolType::REGULAR_SYMBOL));
+    }
+    return listOfKeys;
+    
+}
+
+std::shared_ptr<MalList> MalHashMap::vals() const
+{
+    auto listOfValues = std::make_shared<MalList>();
+    for (auto it = m_hashMap.begin(); it != m_hashMap.end(); ++it) {
+        const auto& [key, value] = *it;
+        listOfValues->append(value);
+    }
+    return listOfValues;
 }
 
 MalException::MalException(const std::string& message)

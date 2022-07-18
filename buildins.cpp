@@ -117,6 +117,15 @@ std::shared_ptr<MalType> list(MalContainer* args)
     return newList;
 }
 
+std::shared_ptr<MalType> makeVector(MalContainer* args)
+{
+    auto newVector = std::make_shared<MalVector>();
+    for (const auto& obj : *args) {
+        newVector->append(obj);
+    }
+    return newVector;
+}
+
 std::shared_ptr<MalType> vec(MalContainer* args)
 {
     auto vector = std::make_shared<MalVector>();
@@ -491,7 +500,7 @@ std::shared_ptr<MalType> isKeyword(MalContainer* args)
 std::string removeQuotes(const std::string& str)
 {
     if (str.size() < 2 || str.front() != '"') {
-        return "";
+        return str;
     }
     return str.substr(1, str.size() - 2);
 }
@@ -506,10 +515,147 @@ std::shared_ptr<MalType> makeKeyword(MalContainer* args)
     if (toKeword->asString().front() == ':') {
         return args->at(0);
     }
+
     if (!toKeword->asMalString()) {
         return MalException::throwException("Argument should be string or keyword");
     }
+
     auto keyword = ':' + removeQuotes(toKeword->asString());
     return std::make_shared<MalSymbol>(keyword, MalSymbol::SymbolType::KEYWORD);
 }
+
+std::shared_ptr<MalType> makeSymbol(MalContainer* args)
+{
+    if (args->isEmpty()) {
+        return MalException::throwException("Not enough arguments to make symbol");
+    }
+
+    if (auto argument = args->at(0); MalCallable::builinOrCallable(argument.get())){
+        return MalException::throwException("Symbol can't be callable object");
+    }
+
+    return std::make_shared<MalSymbol>(removeQuotes(args->at(0)->asString()));
+}
+
+std::shared_ptr<MalType> makeHashMap(MalContainer* args)
+{
+    if (args->size() % 2 != 0) {
+        return MalException::throwException("Not enough arguments to make hash map");
+    }
+
+    auto hashMap = std::make_shared<MalHashMap>();
+    for (size_t elementIndex = 0; elementIndex  < args->size(); elementIndex += 2) {
+        hashMap->insert(args->at(elementIndex)->asString(),
+                        args->at(elementIndex + 1));
+    }
+    return hashMap;
+}
+
+std::shared_ptr<MalType> assoc(MalContainer* args)
+{
+    // (assoc {} "a" 1)
+    if (args->isEmpty()) {
+        return MalException::throwException("Not enought arguments to assoc");
+    }
+
+    auto mapToMereIn = args->at(0)->asMalHashMap();
+
+    if (!mapToMereIn) {
+        return MalException::throwException("First argument should be hash-map");
+    }
+
+    if ((args->size() - 1) % 2 != 0) {
+        return MalException::throwException("Number of keys\\values should be even");
+    }
+
+    auto newHashMap = std::make_shared<MalHashMap>();
+
+    for (auto& [key, value] : *mapToMereIn) {
+        newHashMap->insert(key, value);
+    }
+
+    for (size_t elementIndex = 1; elementIndex < args->size(); elementIndex += 2) {
+        newHashMap->insert(args->at(elementIndex)->asString(),
+                           args->at(elementIndex + 1));
+    }
+    return newHashMap;
+}
+
+std::shared_ptr<MalType> dissoc(MalContainer* args)
+{
+    // (dissoc {:cde 345 :fgh 456} :cde) -> {:fgh 465}
+    if (args->isEmpty() || !args->at(0)->asMalHashMap()) {
+        return MalException::throwException("Hash-map is expected");
+    }
+    auto oldHashMap = args->at(0)->asMalHashMap();
+    auto newHashMap = std::make_shared<MalHashMap>();
+    // TODO: make copy constructor
+    for (auto& [key, value] : *oldHashMap) {
+        newHashMap->insert(key, value);
+    }
+
+    for (size_t keyToRemoveIndex = 1; keyToRemoveIndex < args->size(); ++keyToRemoveIndex) {
+        auto keyToRemove = args->at(keyToRemoveIndex)->asString();
+        newHashMap->remove(keyToRemove);
+    }
+    return newHashMap;
+}
+
+std::shared_ptr<MalType> malGet(MalContainer* args)
+{
+    if (args->isEmpty() || (!args->at(0)->asMalHashMap() && !args->at(0)->asMalNil())) {
+        return MalException::throwException("Hash-map is expected");
+    }
+
+    if (args->at(0)->asMalNil()) {
+        return args->at(0);
+    }
+
+    if (args->size() < 2) {
+        return MalException::throwException("Key to hash-map is expected");
+    }
+
+    auto hashMap = args->at(0)->asMalHashMap();
+    auto key = args->at(1)->asString();
+
+    if (auto relatedValue = hashMap->find(key); relatedValue != hashMap->end()) {
+        return relatedValue->second;
+    }
+    return std::make_shared<MalNil>();
+}
+
+std::shared_ptr<MalType> contains(MalContainer* args)
+{
+    if (args->isEmpty() || !args->at(0)->asMalHashMap()) {
+        return MalException::throwException("Hash-map is expected");
+    }
+
+    if (args->size() < 2) {
+        return MalException::throwException("Key to hash-map is expected");
+    }
+
+    auto hashMap = args->at(0)->asMalHashMap();
+    auto key = args->at(1)->asString();
+
+    auto relatedValue = hashMap->find(key); 
+    return std::make_shared<MalBoolean>(relatedValue != hashMap->end());
+}
+
+std::shared_ptr<MalType> keys(MalContainer* args)
+{
+    if (args->isEmpty() || !args->at(0)->asMalHashMap()) {
+        return MalException::throwException("Hash-map is expected");
+    }
+    return args->at(0)->asMalHashMap()->keys();
+}
+
+std::shared_ptr<MalType> vals(MalContainer* args)
+{
+    if (args->isEmpty() || !args->at(0)->asMalHashMap()) {
+        return MalException::throwException("Hash-map is expected");
+    }
+    return args->at(0)->asMalHashMap()->vals();
+}
+
+
 } // mal

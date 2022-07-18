@@ -269,11 +269,16 @@ public:
     }
 
     void insert(const std::string& key, std::shared_ptr<MalType> value);
+    void remove(const std::string& key);
+
     size_t size() const;
 
     HashMapIteraotr begin();
     HashMapIteraotr end();
     HashMapIteraotr find(const std::string& key);
+
+    std::shared_ptr<MalList> keys() const;
+    std::shared_ptr<MalList> vals() const;
 
 private:
     std::unordered_map<std::string, std::shared_ptr<MalType>> m_hashMap;

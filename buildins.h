@@ -50,4 +50,13 @@ std::shared_ptr<MalType> isSequential(MalContainer* args);
 std::shared_ptr<MalType> isMap(MalContainer* args);
 std::shared_ptr<MalType> isKeyword(MalContainer* args);
 std::shared_ptr<MalType> makeKeyword(MalContainer* args);
+std::shared_ptr<MalType> makeSymbol(MalContainer* args);
+std::shared_ptr<MalType> makeVector(MalContainer* args);
+std::shared_ptr<MalType> makeHashMap(MalContainer* args);
+std::shared_ptr<MalType> assoc(MalContainer* args);
+std::shared_ptr<MalType> dissoc(MalContainer* args);
+std::shared_ptr<MalType> malGet(MalContainer* args);
+std::shared_ptr<MalType> contains(MalContainer* args);
+std::shared_ptr<MalType> keys(MalContainer* args);
+std::shared_ptr<MalType> vals(MalContainer* args);
 } // mal
