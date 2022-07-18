@@ -657,5 +657,26 @@ std::shared_ptr<MalType> vals(MalContainer* args)
     return args->at(0)->asMalHashMap()->vals();
 }
 
+std::shared_ptr<MalType> malReadline(MalContainer* args)
+{
+    if (args->isEmpty()) {
+        return MalException::throwException("Except a string as first argument");
+    }
+    std::cout << removeQuotes(args->at(0)->asString()) << " ";
+    std::string currentLine;
+    std::getline(std::cin, currentLine);
+    
+    if (!currentLine.empty())
+    {
+        return std::make_shared<MalSymbol>(currentLine);
+    }
+
+    return std::make_shared<MalNil>();
+}
+
+std::shared_ptr<MalType> hostLanguage(MalContainer*)
+{
+    return std::make_shared<MalSymbol>("C++20");
+}
 
 } // mal

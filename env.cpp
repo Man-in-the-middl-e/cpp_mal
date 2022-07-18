@@ -35,6 +35,7 @@ GlobalEnv::GlobalEnv()
         { "not", std::make_shared<MalBuildin>(malNot) },
         { "deref", std::make_shared<MalBuildin>(deref) },
         { "*ARGV*", std::make_shared<MalBuildin>(argv) },
+        { "*host-language*", std::make_shared<MalBuildin>(hostLanguage) },
         { "cons", std::make_shared<MalBuildin>(cons) },
         { "concat", std::make_shared<MalBuildin>(concat) },
         { "nth", std::make_shared<MalBuildin>(nth) },
@@ -53,6 +54,7 @@ GlobalEnv::GlobalEnv()
         { "get", std::make_shared<MalBuildin>(malGet) },
         { "keys", std::make_shared<MalBuildin>(keys) },
         { "vals", std::make_shared<MalBuildin>(vals) },
+        { "readline", std::make_shared<MalBuildin>(malReadline) },
 
         { "=", std::make_shared<MalBuildin>(equal) },
         { "<", std::make_shared<MalBuildin>(less) },

@@ -54,3 +54,8 @@ if (${STEP} STREQUAL "step9")
     return()
 endif()
 
+if (${STEP} STREQUAL "stepA")
+    add_executable(stepA_mal stepA_mal.cpp lexer.cpp reader.cpp maltypes.cpp env.cpp eval_ast.cpp buildins.cpp)
+    return()
+endif()
+

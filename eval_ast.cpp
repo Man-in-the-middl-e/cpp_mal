@@ -337,8 +337,7 @@ std::shared_ptr<MalType> eval_ast(std::shared_ptr<MalType> ast, Env& env)
         const auto relatedEnv = env.find(symbol->asString());
         if (!relatedEnv) {
             return MalException::throwException("\"'" + symbol->asString() + "'" + " not found\"");
-        } else if(symbol->asString() == "*ARGV*") {
-            // *ARGV* is the only one callable that doesn't require any arguments
+        } else if (symbol->asString() == "*ARGV*" || symbol->asString() == "*host-language*") {
             return relatedEnv->asMalBuildin()->evaluate(nullptr);
         }
         return relatedEnv;
