@@ -450,7 +450,8 @@ std::shared_ptr<MalType> isNil(MalContainer* args)
 
 std::shared_ptr<MalType> isSymbol(MalContainer* args)
 {
-    return std::make_shared<MalBoolean>(args->head()->asMalSymbol() != nullptr);
+    auto symbol = args->head()->asMalSymbol();
+    return std::make_shared<MalBoolean>(symbol && symbol->getType() != MalSymbol::SymbolType::KEYWORD);
 }
 
 std::shared_ptr<MalType> isTrue(MalContainer* args)
@@ -481,4 +482,34 @@ std::shared_ptr<MalType> isMap(MalContainer* args)
     return std::make_shared<MalBoolean>(!args->isEmpty() && args->at(0)->asMalHashMap());
 }
 
+std::shared_ptr<MalType> isKeyword(MalContainer* args)
+{
+    auto symbol = args->head()->asMalSymbol();
+    return std::make_shared<MalBoolean>(symbol && symbol->getType() == MalSymbol::SymbolType::KEYWORD);
+}
+
+std::string removeQuotes(const std::string& str)
+{
+    if (str.size() < 2 || str.front() != '"') {
+        return "";
+    }
+    return str.substr(1, str.size() - 2);
+}
+
+std::shared_ptr<MalType> makeKeyword(MalContainer* args)
+{
+    if (args->isEmpty()) {
+        return MalException::throwException("Not enough arguments to make keyword");
+    }
+
+    auto toKeword = args->at(0);
+    if (toKeword->asString().front() == ':') {
+        return args->at(0);
+    }
+    if (!toKeword->asMalString()) {
+        return MalException::throwException("Argument should be string or keyword");
+    }
+    auto keyword = ':' + removeQuotes(toKeword->asString());
+    return std::make_shared<MalSymbol>(keyword, MalSymbol::SymbolType::KEYWORD);
+}
 } // mal

@@ -169,7 +169,12 @@ public:
 
 class MalSymbol final : public MalType {
 public:
-    MalSymbol(std::string_view symbol);
+    enum class SymbolType {
+        REGULAR_SYMBOL,
+        KEYWORD
+    };
+public:
+    MalSymbol(std::string_view symbol, SymbolType type = SymbolType::REGULAR_SYMBOL);
 
     std::string asString() const override;
     MalSymbol* asMalSymbol() override;
@@ -178,9 +183,12 @@ public:
     {
         return type->asMalSymbol() && type->asString() == m_symbol;
     }
+
+    SymbolType getType() const;
     
 private:
     std::string m_symbol;
+    SymbolType m_symbolType;
 };
 
 class MalString final : public MalType {

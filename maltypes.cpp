@@ -167,8 +167,9 @@ MalVector::MalVector()
 {
 }
 
-MalSymbol::MalSymbol(std::string_view symbol)
+MalSymbol::MalSymbol(std::string_view symbol, SymbolType type)
     : m_symbol(symbol.data(), symbol.size())
+    , m_symbolType(type)
 {
 }
 
@@ -180,6 +181,11 @@ std::string MalSymbol::asString() const
 MalSymbol* MalSymbol::asMalSymbol()
 {
     return this;
+}
+
+MalSymbol::SymbolType MalSymbol::getType() const
+{
+    return m_symbolType;
 }
 
 MalString::MalString(std::string_view str)

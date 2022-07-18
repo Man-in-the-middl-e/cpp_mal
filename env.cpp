@@ -25,6 +25,7 @@ GlobalEnv::GlobalEnv()
         { "vector?", std::make_shared<MalBuildin>(isVector) },
         { "sequential?", std::make_shared<MalBuildin>(isSequential) },
         { "map?", std::make_shared<MalBuildin>(isMap) },
+        { "keyword?", std::make_shared<MalBuildin>(isKeyword) },
         { "count", std::make_shared<MalBuildin>(count) },
         { "eval", std::make_shared<MalBuildin>(eval) },
         { "read-string", std::make_shared<MalBuildin>(readString) },
@@ -42,6 +43,7 @@ GlobalEnv::GlobalEnv()
         { "throw", std::make_shared<MalBuildin>(malThrow) },
         { "apply", std::make_shared<MalBuildin>(apply) },
         { "map", std::make_shared<MalBuildin>(map) },
+        { "keyword", std::make_shared<MalBuildin>(makeKeyword) },
 
         { "=", std::make_shared<MalBuildin>(equal) },
         { "<", std::make_shared<MalBuildin>(less) },

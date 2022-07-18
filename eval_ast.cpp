@@ -331,6 +331,9 @@ std::shared_ptr<MalType> eval_ast(std::shared_ptr<MalType> ast, Env& env)
         }
         return newContainer;
     } else if (const auto symbol = ast->asMalSymbol(); symbol) {
+        if (symbol->getType() == MalSymbol::SymbolType::KEYWORD) {
+            return ast;
+        }
         const auto relatedEnv = env.find(symbol->asString());
         if (!relatedEnv) {
             return MalException::throwException("\"'" + symbol->asString() + "'" + " not found\"");

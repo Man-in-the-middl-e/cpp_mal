@@ -48,4 +48,6 @@ std::shared_ptr<MalType> isFalse(MalContainer* args);
 std::shared_ptr<MalType> isVector(MalContainer* args);
 std::shared_ptr<MalType> isSequential(MalContainer* args);
 std::shared_ptr<MalType> isMap(MalContainer* args);
+std::shared_ptr<MalType> isKeyword(MalContainer* args);
+std::shared_ptr<MalType> makeKeyword(MalContainer* args);
 } // mal
