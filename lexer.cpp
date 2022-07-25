@@ -74,6 +74,7 @@ std::vector<Token> Lexer::tokenize()
             tokens.push_back(makeOneCharToken(TokenType::RIGHT_PAREN));
             break;
         }
+        case '^':
         case '\'': 
         case '`':
         case '@':
@@ -96,10 +97,6 @@ std::vector<Token> Lexer::tokenize()
             } else {
                 tokens.push_back(makeOneCharToken(TokenType::SYMBOL));
             }
-            break;
-        }
-        case '^': {
-            tokens.push_back(makeOneCharToken(TokenType::CARET));
             break;
         }
         case '-': {

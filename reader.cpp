@@ -144,6 +144,9 @@ std::string expandMacro(const Token& currentToken)
     case '@': {
         return "deref";
     }
+    case '^': {
+        return "with-meta";
+    }
     default: {
         return "";
     }
@@ -160,7 +163,14 @@ std::shared_ptr<MalType> readMacro(const Reader& reader)
 
     auto macroExpandedList = std::make_shared<MalList>();
     macroExpandedList->append(std::make_shared<MalSymbol>(expandMacro(currentToken)));
-    macroExpandedList->append(readFrom(reader));
+    if (currentToken.token == "^") {
+        auto metaInfo = readFrom(reader);
+        reader.next();
+        macroExpandedList->append(readFrom(reader));
+        macroExpandedList->append(metaInfo);
+    } else {
+        macroExpandedList->append(readFrom(reader));
+    }
     return macroExpandedList;
 }
 
