@@ -61,4 +61,6 @@ std::shared_ptr<MalType> keys(MalContainer* args);
 std::shared_ptr<MalType> vals(MalContainer* args);
 std::shared_ptr<MalType> malReadline(MalContainer* args);
 std::shared_ptr<MalType> hostLanguage(MalContainer* args);
+std::shared_ptr<MalType> meta(MalContainer* args);
+std::shared_ptr<MalType> withMeta(MalContainer* args);
 } // mal

@@ -55,6 +55,8 @@ GlobalEnv::GlobalEnv()
         { "keys", std::make_shared<MalBuildin>(keys) },
         { "vals", std::make_shared<MalBuildin>(vals) },
         { "readline", std::make_shared<MalBuildin>(malReadline) },
+        { "meta", std::make_shared<MalBuildin>(meta) },
+        { "with-meta", std::make_shared<MalBuildin>(withMeta) },
 
         { "=", std::make_shared<MalBuildin>(equal) },
         { "<", std::make_shared<MalBuildin>(less) },

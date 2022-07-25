@@ -40,11 +40,20 @@ public:
     virtual MalBuildin* asMalBuildin() { return nullptr; }
     virtual MalAtom* asMalAtom() { return nullptr; }
 
+    void setMetaInfo(std::shared_ptr<MalType>);
+    std::shared_ptr<MalType> getMetaInfo() const;
+
+    virtual std::shared_ptr<MalType> clone() const;
+
     virtual bool operator==(MalType*) const { return false; }
 
     virtual ~MalType()
     {
     }
+
+protected:
+    // TODO: move this to separate class
+    std::shared_ptr<MalType> m_metaInfo;
 };
 
 class MalAtom : public MalType {
@@ -113,6 +122,8 @@ public:
 
     std::string asString() const override;
     MalContainer* asMalContainer() override;
+
+    std::shared_ptr<MalType> clone() const override;
 
     virtual bool operator==(MalType* type) const override
     {
@@ -250,6 +261,7 @@ public:
 public:
     std::string asString() const override;
     MalHashMap* asMalHashMap() override;
+    std::shared_ptr<MalType> clone() const override;
 
     virtual bool operator==(MalType* type) const override
     {
@@ -301,6 +313,8 @@ private:
 class MalCallable : public MalType {
 public:
     virtual std::shared_ptr<MalType> evaluate(MalContainer* arguments, Env& env) = 0;
+
+public:
     static MalCallable* builinOrCallable(MalType* callable);
 };
 
@@ -312,7 +326,8 @@ public:
     MalClosure* asMalClosure() override;
 
     std::shared_ptr<MalType> evaluate(MalContainer* arguments, Env& env) override;
-
+    std::shared_ptr<MalType> clone() const override;
+    
     bool getIsMacroFucntionCall() const;
     void setIsMacroFunctionCall(bool isMacro);
 
@@ -336,6 +351,8 @@ public:
 
     std::shared_ptr<MalType> evaluate(MalContainer* args, Env& env) override;
     std::shared_ptr<MalType> evaluate(MalContainer* args) const;
+
+    std::shared_ptr<MalType> clone() const override;
 
 private:
     Buildin m_buildin;

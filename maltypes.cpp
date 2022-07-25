@@ -9,6 +9,23 @@
 
 namespace mal {
 
+std::shared_ptr<MalType> MalType::clone() const
+{
+    return std::make_shared<MalNil>();
+}
+
+void MalType::setMetaInfo(std::shared_ptr<MalType> metaInfo)
+{
+    if (this->asMalBuildin() || this->asMalClosure() || this->asMalContainer() || this->asMalHashMap()) {
+        m_metaInfo = metaInfo;
+    }
+}
+
+std::shared_ptr<MalType> MalType::getMetaInfo() const
+{
+    return m_metaInfo ? m_metaInfo : std::make_shared<MalNil>();
+}
+
 MalAtom::MalAtom(std::shared_ptr<MalType> malType, const std::string& atomDesripton)
     : m_underlyingType(malType)
     , m_atomDescripton(atomDesripton)
@@ -86,6 +103,11 @@ std::string MalContainer::asString() const
     }
     ss << (m_type == ContainerType::LIST ? ')' : ']');
     return ss.str();
+}
+
+std::shared_ptr<MalType> MalContainer::clone() const
+{
+    return std::make_shared<MalContainer>(m_data, m_type);
 }
 
 void MalContainer::append(std::shared_ptr<MalType> element)
@@ -319,6 +341,13 @@ MalHashMap* MalHashMap::asMalHashMap()
     return this;
 }
 
+std::shared_ptr<MalType> MalHashMap::clone() const
+{
+    auto newHashMap = std::make_shared<MalHashMap>();
+    newHashMap->m_hashMap = m_hashMap;
+    return newHashMap;
+}
+
 void MalHashMap::insert(const std::string& key, std::shared_ptr<MalType> value)
 {
     m_hashMap[key] = value;
@@ -354,12 +383,9 @@ std::shared_ptr<MalList> MalHashMap::keys() const
     auto listOfKeys = std::make_shared<MalList>();
     for (auto it = m_hashMap.begin(); it != m_hashMap.end(); ++it) {
         const auto& [key, value] = *it;
-        listOfKeys->append(std::make_shared<MalSymbol>(key, key.starts_with(':') 
-                                                     ? MalSymbol::SymbolType::KEYWORD
-                                                     : MalSymbol::SymbolType::REGULAR_SYMBOL));
+        listOfKeys->append(std::make_shared<MalSymbol>(key, key.starts_with(':') ? MalSymbol::SymbolType::KEYWORD : MalSymbol::SymbolType::REGULAR_SYMBOL));
     }
     return listOfKeys;
-    
 }
 
 std::shared_ptr<MalList> MalHashMap::vals() const
@@ -407,6 +433,11 @@ MalClosure::MalClosure(const std::shared_ptr<MalType> parameters, const std::sha
 {
 }
 
+std::shared_ptr<MalType> MalClosure::clone() const
+{
+    return std::make_shared<MalClosure>(m_functionParameters, m_functionBody, m_relatedEnv);
+}
+
 std::string MalClosure::asString() const
 {
     return "closure";
@@ -419,7 +450,7 @@ MalClosure* MalClosure::asMalClosure()
 
 std::shared_ptr<MalType> MalClosure::evaluate(MalContainer* arguments, Env& env)
 {
-    // NOTE: we can't just make env parent of m_relatedEnv, 
+    // NOTE: we can't just make env parent of m_relatedEnv,
     // because at some point env could become referene to deallocated memory,
     // so we copy it, probably there is a better way to do this
     m_relatedEnv.addToEnv(env);
@@ -473,6 +504,14 @@ std::shared_ptr<MalType> MalBuildin::evaluate(MalContainer* args) const
         return m_buildin(args);
     }
     return MalException::throwException("Buildin function is not defined");
+}
+
+std::shared_ptr<MalType> MalBuildin::clone() const
+{
+    if (m_buildin) {
+        return std::make_shared<MalBuildin>(m_buildin);
+    }
+    return std::make_shared<MalBuildin>(m_buildinWithEnv);
 }
 
 } // namespace mal

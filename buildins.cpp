@@ -668,7 +668,7 @@ std::shared_ptr<MalType> malReadline(MalContainer* args)
     
     if (!currentLine.empty())
     {
-        return std::make_shared<MalSymbol>(currentLine);
+        return std::make_shared<MalSymbol>('"' + MalString::escapeString(currentLine) + '"');
     }
 
     return std::make_shared<MalNil>();
@@ -677,6 +677,29 @@ std::shared_ptr<MalType> malReadline(MalContainer* args)
 std::shared_ptr<MalType> hostLanguage(MalContainer*)
 {
     return std::make_shared<MalSymbol>("C++20");
+}
+
+std::shared_ptr<MalType> meta(MalContainer* args)
+{
+    if (args->isEmpty()) {
+        return MalException::throwException("Not arguments for meta");
+    }
+    return args->at(0)->getMetaInfo();
+}
+
+std::shared_ptr<MalType> withMeta(MalContainer* args)
+{
+    if (args->size() < 2) {
+        return MalException::throwException("Not arguments for meta");
+    }
+
+    auto type = args->at(0);
+    auto metaInfo = args->at(1);
+
+    auto newType = type->clone();
+    newType->setMetaInfo(metaInfo);
+    
+    return newType;
 }
 
 } // mal
